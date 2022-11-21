@@ -1,0 +1,28 @@
+{
+  "name": "gutentag",
+  "version": "1.0.0",
+  "description": "A suite of node.js scripts to audit cookie collection on websites, with our without user consent, and trace digItal marketing tags and related server calls",
+  "main": "cookies.js",
+  "scripts": {
+    "test": "node cookies.js"
+  },
+  "dependencies": {
+    "playwright": "^1.21.1",
+    "playwright-chromium": "^1.8.0-next.1608058261773"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/analyticsftw/gutentag.git"
+  },
+  "keywords": [
+    "google",
+    "cookies",
+    "tags"
+  ],
+  "author": "Julien Coquet",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/analyticsftw/gutentag/issues"
+  },
+  "homepage": "https://github.com/analyticsftw/gutentag#readme"
+}
