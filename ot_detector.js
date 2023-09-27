@@ -10,7 +10,7 @@ const { chromium } = require('playwright');
 // start URL
 var myArgs = process.argv.slice(2);
 myURL = myArgs[0] ? myArgs[0] : "https://mightyhive.com/";
-filename = myArgs[1] ?  myArgs[1] : "mightyhive.csv";
+filename = myArgs[1] ?  myArgs[1] : "onetrust.csv";
 
 console.log("Starting scan for " + myURL);
 startTime = new Date();
@@ -23,66 +23,50 @@ startTime = new Date();
   const page = await context.newPage();
 
   // Log and continue all network requests
+  var lf="";
   page.route('**', route => {
     const request = route.request();
     var rs = request.url();
     if (rs != "undefined") {
       // List of identified server calls to monitor and log
       hitdomains = [
-        // Google Analytics
-        "google-analytics.com/collect",
-        "google-analytics.com/g/collect",
-        "google-analytics.com/j/collect",
-        "google-analytics.com/r/collect",
-        
-        // Google Analytics legacy Urchin.js
-        "google-analytics.com/__utm.gif",
-        
-        // Google Tag Manager
-        "googletagmanager.com/gtm.js",
-        
-        // Google Optimize
-        "googleoptimize.com",
-
-        // Google Marketing Platform
-        "doubleclick.net",
-        "ads.google.com",
-
-        // Adobe Analytics
-        "/b/ss",
-        "2o7.net",
-
-        // Tealium IQ TMS
-        "tiqcdn.com"
+        // OneTrust
+        "cookielaw",
+        "onetrust"
       ];
+      var j=0;
+      lf = "Lib not found";
       for (var i=0;i<hitdomains.length;i++){
         // If request found in list, log the call
         if (rs.indexOf(hitdomains[i])!==-1){
-          sf.hit2csv(rs,filename,myURL);
+          lf = "Lib found";
+          j++;
+          sf.hit2csv(rs,'ot_dump.csv',myURL);
         }
       }
+      
     }
     return route.continue();
   });
 
   // Navigate to the specified URL
-  await page.goto(myURL);
-  // Google Tag Manager: look for data layer
-  try {
-    var dl = await page.evaluate(() => dataLayer);
-    console.log(dl.length);
+  try{
+    await page.goto(myURL);
   } catch (e) {
-    console.log('dataLayer could not be evaluated ', e);
+    sf.hit2csv("Error: "+e.name,filename,myURL); 
   }
   
-  // Consent: wait for OneTrust consent banner and click 'Accept'
-  
-  await page.click('#onetrust-accept-btn-handler');
 
-  
   // Close headless browser after traffic stops
   await page.waitForLoadState('networkidle');
+  try {
+    var ot = await page.evaluate(() => OneTrust);
+    var of = ot !== undefined ? "OT found" : "OT not found";
+  } catch (e) {
+    var of = "Error detecting OneTrust";
+  }
   await browser.close();
+  sf.hit2csv(of,filename,myURL); 
   
   // Time calculation for performance reasons
   endTime = new Date();

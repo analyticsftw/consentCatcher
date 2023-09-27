@@ -76,8 +76,7 @@ startTime = new Date();
   }
   
   // Consent: wait for OneTrust consent banner and click 'Accept'
-  
-  await page.click('#onetrust-accept-btn-handler');
+  // await page.click('#onetrust-accept-btn-handler');
 
   
   // Close headless browser after traffic stops
