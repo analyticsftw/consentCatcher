@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@google-cloud/bigquery": "^7.2.0",
-    "playwright": "^1.21.1",
+    "chromium": "^3.0.3",
+    "playwright": "^1.38.1",
     "playwright-chromium": "^1.8.0-next.1608058261773"
   },
   "repository": {
@@ -25,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/analyticsftw/gutentag/issues"
   },
-  "homepage": "https://github.com/analyticsftw/gutentag#readme"
+  "homepage": "https://github.com/analyticsftw/gutentag#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.38.1"
+  }
 }

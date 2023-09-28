@@ -9,8 +9,8 @@
 
 
 /* Dependencies */
-fs = require('fs')
-var sf = require('./support_functions.js');
+const fs = require('fs')
+const sf = require('./support_functions.js');
 
 // start URL
 var myArgs = process.argv.slice(2);
@@ -19,7 +19,7 @@ filename = myArgs[1] ?  myArgs[1] : "outputs/diageo_allsites.csv";
 //TODO: add support for passing start URL via command line or query string
 
 //define browser type 
-const { chromium } = require('playwright');
+const {chromium} = require('playwright');
 
 const newscan = "";
 console.log("Starting scan for " + myURL);
@@ -27,7 +27,6 @@ startTime = new Date();
 
 // Launching browser, everything below this is async
 (async () => {
-
   const browser = await chromium.launch({
     headless: true
   });
@@ -35,23 +34,26 @@ startTime = new Date();
   const context = await browser.newContext({ignoreHTTPSErrors:true});
   const page = await context.newPage();
 
-  /*
-  // Log and continue all network requests
-  page.route('**', route => {
-    const request = route.request();
-
-    if (request.url() != "undefined") {
-      //rec = logCall(newscan, request.url(), JSON.stringify(request.headers()));
+  try{
+    await page.goto(myURL);
+    function get_status(response){
+      return response.status;
     }
-    return route.continue();
-  });
-  */
+    http_status = page.on("response", get_status);
+    const real_url = page.url();
+    await page.waitForLoadState('networkidle');
+    await browser.close();
+    sf.logHit(filename,myURL+","+real_url + ","+http_status);
+  } catch (error) {
+    console.log('***********');
+    console.log(error);
+    
+    if (error instanceof chromium.errors.TimeoutError){
+      sf.logHit(filename,myURL+",,timeout");
+    }
+    
+  }
   
-  await page.goto(myURL);
-  const real_url = page.url();
-  await page.waitForLoadState('networkidle');
-  await browser.close();
-  sf.logHit(filename,myURL+","+real_url);
   endTime = new Date();
   scanTime =  endTime - startTime;
   console.log("Scanned " + myURL + " in " + scanTime+ "s");
