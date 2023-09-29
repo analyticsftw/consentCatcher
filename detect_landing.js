@@ -35,23 +35,36 @@ startTime = new Date();
   const page = await context.newPage();
 
   try{
-    await page.goto(myURL);
-    function get_status(response){
-      return response.status;
+    async function get_status(r){
+      //console.log(JSON.stringify(request.headersArray()));
+      const req = await r;
+      console.log("Request: " + req);
+      const r_status = await req.status();
+      const r_headers = await req.request();
+      //console.log(r_headers);
+      http_status.push(r_status);
+      http_headers.push(r_headers);
+      return r_status;
     }
-    http_status = page.on("response", get_status);
+    http_headers=[];
+    http_status=[];
+    const current_page = await page.goto(myURL);
+    sf.logHit(filename,"Current page: "+JSON.stringify(current_page));
+    
+    const page_info = await page.waitForResponse(myURL);
+    sf.logHit(filename,"Page info: "+JSON.stringify(page_info));
+
+    console.log(page_info);
+    //current_page.on("response", get_status);
     const real_url = page.url();
     await page.waitForLoadState('networkidle');
     await browser.close();
     sf.logHit(filename,myURL+","+real_url + ","+http_status);
   } catch (error) {
-    console.log('***********');
-    console.log(error);
-    
-    if (error instanceof chromium.errors.TimeoutError){
-      sf.logHit(filename,myURL+",,timeout");
-    }
-    
+    //console.log(JSON.stringify(error));
+    sf.logHit(filename,myURL+",,",error);
+    await page.waitForLoadState('networkidle');
+    await browser.close();
   }
   
   endTime = new Date();

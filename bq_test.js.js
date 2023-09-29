@@ -1,4 +1,11 @@
-  const {BigQuery} = require('@google-cloud/bigquery');
+// Project info
+
+const project_id="diageo-cookiebase";
+const dataset = "";
+const table = "";
+
+
+const {BigQuery} = require('@google-cloud/bigquery');
   const bigquery = new BigQuery();
   const fields = [
     'date', 

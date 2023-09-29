@@ -20,7 +20,7 @@ var myArgs = process.argv.slice(2);
 (async () => { 
     const browser = await playwright['chromium'].launch(
         //{executablePath: '/usr/bin/chromium-browser', headless: true}
-        {headless: false}
+        {headless: true}
     );
     const context = await browser.newContext();
     const page = await context.newPage();

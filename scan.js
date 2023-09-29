@@ -53,6 +53,9 @@ startTime = new Date();
   for (i = 0; i < cl; i++) {
     cookies[i].siteURL = myURL;
   }
+
+// TODO: handle selectors for agegate and add form inputs and clicking/submitting
+
   sf.cookie2csv(cookies,filename,"before");
   await page.click('#onetrust-accept-btn-handler');
   //await page.click('#accept-all-cookies');
