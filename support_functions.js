@@ -46,7 +46,10 @@ var internal = module.exports = {
     const opts = { fields };
 
     // Inject cookie timestamp
-    callTime = Date.now();
+    // callTime = Date.now();
+    const now = new Date();
+    const callTime = now.toISOString();
+
     var cl = 0; cl = cookie.length;
     for (i = 0; i < cl; i++) {
       cookie[i].date=callTime;
@@ -73,7 +76,7 @@ var internal = module.exports = {
  * @param  {} site : the URL being analyzed
  */
  function hit2csv(hit,filename,site){
-   addquotes = internal.addQuotes();
+  addquotes = internal.addQuotes();
   // Create timestamp for each call
   callTime = Date.now();
   // Sanitize inputs
@@ -94,34 +97,25 @@ var internal = module.exports = {
  * @param  {} site : the URL being analyzed
  */
 function error2csv(filename,url, errorMessage){
-  var callTime = Date.now();
+  const now = new Date();
+  const callTime = now.toISOString();
   try {
     //removes commas and quotes from error message
     cleanError = errorMessage.replace(/,|"/g, '');
-    console.log('cleanError' + cleanError)
+    // console.log('cleanError: ' + cleanError)
     //splits up error into lines
     const errorLines = cleanError.split('\n');
     //selects most useful lines and removes any quotes and commas
-    const errorLineOne = errorLines[0].replace(/,|"/g, '');
+    const errorLineOne = errorLines[0];
     //error line two is not always available
-    const errorLineTwo = errorLines[2] ? errorLines[2].replace(/,|"/g, '') : '';
+    const errorLineTwo = errorLines[2] ? errorLines[2] : '';
     // Add quotes to strings
-    const error_data = [callTime, addQuotes(url), addQuotes(errorLineOne), addQuotes(errorLineTwo)];
-    const errorLine = error_data.join(',') + '\n';
+    const errorData = [callTime, addQuotes(url), addQuotes(errorLineOne), addQuotes(errorLineTwo)];
+    const errorLine = errorData.join(',') + '\n';
     fs.appendFile(filename, errorLine, (err) => {
       if(err) throw err;
       console.log('Line appended to ' + filename);
     });
-
-//   addquotes = internal.addQuotes();
-//  // Create timestamp for each call
-//  callTime = Date.now();
-//  // Sanitize inputs
-//  message = [addQuotes(callTime),addQuotes(site),addQuotes(hit)];
-//  line = message.join(";");
- // Log each call to CSV
-
-  //  internal.logHit(filename,line);
  } catch (err) {
    console.error(err);
  }
@@ -136,6 +130,7 @@ function error2csv(filename,url, errorMessage){
 function logHit (file, message) {
   const fs = require('fs');
   fs.appendFile(file, message+"\n", function (err) {
+  // fs.appendFile(file, message, function (err) {
     if (err) {throw err; console.log(err);};
   });
 }
@@ -178,6 +173,37 @@ async function google_sheets_read (sheetId, range){
 
 }
 
+async function appendToBigQuery(datasetId, tableId, filename){
+  const { BigQuery } = require('@google-cloud/bigquery');
+  const bigquery = new BigQuery(await getSecret('projects/191126329179/secrets/consent_catcher/versions/1'), { projectId: 'your-project-id' });
+
+  async function loadCSVData() {
+    const metadata = {
+      sourceFormat: 'CSV',
+      skipLeadingRows: 0,
+      autodetect: false,
+      writeDisposition: 'WRITE_APPEND',  // Append data to existing table
+    };
+
+    // Load CSV file into BigQuery
+    const [job] = await bigquery
+      .dataset(datasetId)
+      .table(tableId)
+      .load(filename, metadata);
+
+    // Check the job's status for errors
+    const errors = job.status.errors;
+    if (errors && errors.length > 0) {
+      throw new Error('BigQuery job failed');
+    }
+    console.log('CSV data loaded successfully.');
+  }
+
+  loadCSVData().catch(console.error);
+
+}
+
+
 /** Export functions
   * Make sure to reference in other scripts as:
   * `const sf = require('./support_functions.js');`
@@ -191,6 +217,7 @@ module.exports = {
   hit2csv,
   logHit,
   google_sheets_read,
-  error2csv
+  error2csv,
+  appendToBigQuery
 }
 
