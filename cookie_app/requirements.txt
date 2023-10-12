@@ -1,0 +1,26 @@
+altgraph @ file:///System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot2/ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/python3/python3-141/altgraph-0.17.2-py2.py3-none-any.whl
+cachetools==5.3.1
+certifi==2023.7.22
+charset-normalizer==3.3.0
+future @ file:///System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot2/ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/python3/python3-141/future-0.18.2-py3-none-any.whl
+google-api-core==2.12.0
+google-auth==2.23.3
+google-cloud-bigquery-datatransfer==3.12.1
+googleapis-common-protos==1.60.0
+grpcio==1.59.0
+grpcio-status==1.59.0
+idna==3.4
+macholib @ file:///System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot2/ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/python3/python3-141/macholib-1.15.2-py2.py3-none-any.whl
+numpy==1.26.0
+pandas==2.1.1
+proto-plus==1.22.3
+protobuf==4.24.4
+pyasn1==0.5.0
+pyasn1-modules==0.3.0
+python-dateutil==2.8.2
+pytz==2023.3.post1
+requests==2.31.0
+rsa==4.9
+six @ file:///System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot2/ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/python3/python3-141/six-1.15.0-py2.py3-none-any.whl
+tzdata==2023.3
+urllib3==2.0.6
