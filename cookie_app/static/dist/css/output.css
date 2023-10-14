@@ -936,6 +936,14 @@ input[type="range"]::-ms-fill-lower {
   right: 0px;
 }
 
+.left-0 {
+  left: 0px;
+}
+
+.top-0 {
+  top: 0px;
+}
+
 .z-10 {
   z-index: 10;
 }
@@ -1007,6 +1015,18 @@ input[type="range"]::-ms-fill-lower {
 
 .table {
   display: table;
+}
+
+.table-cell {
+  display: table-cell;
+}
+
+.table-row {
+  display: table-row;
+}
+
+.grid {
+  display: grid;
 }
 
 .hidden {
@@ -1097,6 +1117,26 @@ input[type="range"]::-ms-fill-lower {
   width: 2rem;
 }
 
+.w-\[500px\] {
+  width: 500px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.w-4\/12 {
+  width: 33.333333%;
+}
+
+.w-6\/12 {
+  width: 50%;
+}
+
+.min-w-\[600px\] {
+  min-width: 600px;
+}
+
 .max-w-7xl {
   max-width: 80rem;
 }
@@ -1111,6 +1151,18 @@ input[type="range"]::-ms-fill-lower {
 
 .flex-shrink-0 {
   flex-shrink: 0;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.table-auto {
+  table-layout: auto;
+}
+
+.table-fixed {
+  table-layout: fixed;
 }
 
 .origin-top-right {
@@ -1137,12 +1189,20 @@ input[type="range"]::-ms-fill-lower {
   cursor: pointer;
 }
 
+.resize {
+  resize: both;
+}
+
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .grid-cols-7 {
   grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
 .flex-col {
@@ -1163,6 +1223,10 @@ input[type="range"]::-ms-fill-lower {
 
 .justify-between {
   justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 0.5rem;
 }
 
 .space-x-4 > :not([hidden]) ~ :not([hidden]) {
@@ -1194,8 +1258,24 @@ input[type="range"]::-ms-fill-lower {
   border-color: rgb(243 244 246 / var(--tw-divide-opacity));
 }
 
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-scroll {
+  overflow: scroll;
+}
+
 .overflow-x-auto {
   overflow-x: auto;
+}
+
+.break-words {
+  overflow-wrap: break-word;
+}
+
+.break-all {
+  word-break: break-all;
 }
 
 .rounded-full {
@@ -1222,6 +1302,14 @@ input[type="range"]::-ms-fill-lower {
 
 .border-2 {
   border-width: 2px;
+}
+
+.border {
+  border-width: 1px;
+}
+
+.border-0 {
+  border-width: 0px;
 }
 
 .border-b {
@@ -1287,6 +1375,10 @@ input[type="range"]::-ms-fill-lower {
 
 .p-2 {
   padding: 0.5rem;
+}
+
+.p-4 {
+  padding: 1rem;
 }
 
 .px-2 {
