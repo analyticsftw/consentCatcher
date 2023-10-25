@@ -1,6 +1,6 @@
 {% if summary_headers and summary_data %}
 
-<table class="text-sm text-left text-gray-500 dark:text-gray-800 w-10/12 m-auto border-2 border-solid border-gray-600">
+<table class="text-sm text-left text-gray-500 dark:text-gray-800 w-10/12 m-auto border-2 border-solid border-gray-600 border-collapse my-5">
   <thead class="text-xs text-gray-100 uppercase dark:text-gray-100 bg-gray-800">
     <tr>
       {% for header in summary_headers %}
@@ -43,9 +43,10 @@
   </thead>
   <tbody>
     {% for row in summary_data %}
-    <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-400 cursor-pointer" onclick="toggleDetailedTable('{{ row['cookie_siteURL'] }}')">
+    <!-- <tr data-site="{{ row['cookie_siteURL'] }}" class="siteCookiesRow bg-gray-200 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-400 cursor-pointer" onclick="toggleDetailedTable('{{ row['cookie_siteURL'] }}')"> -->
+      <tr data-site="{{ row['cookie_siteURL'] }}" class="siteCookiesRow bg-gray-200 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-400 cursor-pointer">
       {% for key, value in row.items() %}
-      <td class="px-6 py-2" style="width: calc(100% / {{ summary_headers|length }});">{{ value }}</td>
+      <td class="px-6 py-2 column_{{summary_headers[loop.index0]}}" style="width: calc(100% / {{ summary_headers|length }});">{{ value }}</td>
       {% endfor %}
       <td class="px-6 py-2">
           <svg class="w-6/12 m-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -53,24 +54,26 @@
           </svg>
       </td>
     </tr>
-    <tr id="detailed-{{ row['cookie_siteURL'] }}"
-      class="detailed-table border-b border-gray-200 dark:border-gray-700 hover:bg-gray-400 cursor-pointer">
-      <td colspan="{{ summary_headers|length + 1 }}">
+    <tr data-site="{{ row['cookie_siteURL'] }}" id="detailed-{{ row['cookie_siteURL'] }}"
+      class="detailed-table border-b border-gray-200 dark:border-gray-700 cursor-pointer">
+      <td class="p-0" colspan="{{ summary_headers|length + 1 }}">
         <table
           class="text-xs text-left text-gray-500 dark:text-gray-800 w-full m-auto">
-          <thead class="text-center text-xs text-gray-100 uppercase dark:text-gray-100 bg-gray-800">
+          <thead class="border border-gray-600 text-center text-xs text-gray-100 uppercase dark:text-gray-100 bg-gray-800">
             <tr>
               {% for header in detailed_headers %}
-              <th style="width: calc(100% / {{ detailed_headers|length }});">{{ header }}</th>
+              <th style="width: calc(100% / {{ detailed_headers|length+1 }})" class="capitalize">{{ header }}</th>
               {% endfor %}
+              <!-- <th style="width: calc(100%/20)" ></th> -->
             </tr>
           </thead>
           <tbody>
             {% for detail in detailed_data[row['cookie_siteURL']] %}
-            <tr class="border-b border-gray-200 dark:border-gray-700">
+            <tr class="cookie_row border border-gray-600 hover:ring-inset hover:ring-blue-900 hover:ring-offset-0 hover:ring-2">
               {% for key, value in detail.items() %}
-              <td class="border border-gray-600 px-2 py-2 break-all" style="width: calc(100% / {{ detailed_headers|length }});">{{ value }}</td>
+              <td class="border border-gray-600 break-all" style="width: calc(100% / {{ detailed_headers|length+1 }})">{{ value }}</td>
               {% endfor %}
+              <!-- <td class="text-center" style="width: calc(100%/20)" ><input id="checked-checkbox" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"></td> -->
             </tr>
             {% endfor %}
           </tbody>
