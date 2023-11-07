@@ -115,7 +115,13 @@ const { chromium } = require("playwright");
 
       let agegate_phase = "";
       if (await page.isVisible("#age_content")) {
-        await page.selectOption("#age_select_country", "FR");
+        const options = await page.$$eval('#age_select_country > option', options => options.map(option => option.value));
+        if (options.includes('GB')) {
+          await page.selectOption('#age_select_country', 'GB');
+        } else if (options.includes('UK')) {
+          await page.selectOption('#age_select_country', 'UK');
+        }
+
 
         // THis block is only to see console logs in the browser to be shown in the terminal
         page.on("console", (msg) => {

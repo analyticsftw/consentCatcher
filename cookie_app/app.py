@@ -85,14 +85,14 @@ def authorized():
 def get_google_oauth_token():
     return session.get('google_token')
 
-@app.route('/index')
+@app.route('/home')
 def home():
     if 'google_token' in session:
         user_info = google.get('userinfo')
         if user_info.status == 200:
             print(user_info.data)
 
-            return render_template('index.html',user=user_info.data)
+            return render_template('index.html',user=user_info.data, show_search_bar=False)
     else:
             # Handle HTTP error from Google API
             return redirect(url_for('login'))
@@ -163,7 +163,7 @@ def scan_summary():
             # print(headers)
 
             user_info = google.get('userinfo')
-            return render_template('scan_summary.html', summary_headers=summary_headers, detailed_headers=detailed_headers, summary_data=summary_dict, detailed_data=detailed_data,  user=user_info.data, page='Cookie Scan Summary')
+            return render_template('scan_summary.html', summary_headers=summary_headers, detailed_headers=detailed_headers, summary_data=summary_dict, detailed_data=detailed_data,  user=user_info.data, page='Cookie Scan Summary', show_search_bar=True)
 
         else:
             # Handle HTTP error from Google API

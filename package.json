@@ -12,7 +12,8 @@
     "chromium": "^3.0.3",
     "json2csv": "^6.0.0-alpha.2",
     "playwright": "^1.38.1",
-    "playwright-chromium": "^1.38.1"
+    "playwright-chromium": "^1.38.1",
+    "express":"^4.18.2"
   },
   "repository": {
     "type": "git",
