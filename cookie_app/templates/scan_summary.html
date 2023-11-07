@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
 {% if summary_headers and summary_data %}
 
 <table class="text-sm text-left text-gray-500 dark:text-gray-800 w-10/12 m-auto border-2 border-solid border-gray-600 border-collapse my-5">
@@ -71,7 +73,7 @@
             {% for detail in detailed_data[row['cookie_siteURL']] %}
             <tr class="cookie_row border border-gray-600 hover:ring-inset hover:ring-blue-900 hover:ring-offset-0 hover:ring-2">
               {% for key, value in detail.items() %}
-              <td class="border border-gray-600 break-all" style="width: calc(100% / {{ detailed_headers|length+1 }})">{{ value }}</td>
+              <td class="border border-gray-600 break-all p-1" style="width: calc(100% / {{ detailed_headers|length+1 }})">{{ value }}</td>
               {% endfor %}
               <!-- <td class="text-center" style="width: calc(100%/20)" ><input id="checked-checkbox" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"></td> -->
             </tr>
@@ -86,3 +88,4 @@
 {% else %}
 <p>No data fetched yet.</p>
 {% endif %}
+{% endblock %}

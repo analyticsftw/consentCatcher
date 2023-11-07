@@ -48,54 +48,76 @@ document.addEventListener("DOMContentLoaded", function () {
 		});
 	}
 
-
-	// COOKIES SEARCH BAR
-	const searchInput = document.getElementById("default-search");
-	// store name elements in array-like object
-	const namesFromDOM = document.getElementsByClassName("cookie_row");
-	// listen for user events
-
-	let timeout;
-	searchInput.addEventListener("keyup", (event) => {
-		clearTimeout(timeout);
-		timeout = setTimeout(function() {
-			const { value } = event.target;
-
-			// get user search input converted to lowercase
-			const searchQuery = value.toLowerCase();
-
-			for (const nameElement of namesFromDOM) {
-				// store name text and convert to lowercase
-				let name = nameElement.textContent.toLowerCase();
-				// compare current name to search input
-				if (name.includes(searchQuery)) {
-					// found name matching search, display it
-					nameElement.classList.add("visible");
-					nameElement.style.display = "table-row";
-				} else {
-					// no match, don't display name
-					nameElement.classList.remove("visible");
-					nameElement.style.display = "none";
-				}
+	// Prevent reload when click on current page anchor tags
+	document.querySelectorAll('a').forEach(anchor => {
+		anchor.addEventListener('click', function(event) {
+			var href = this.getAttribute('href');
+			var currentURL = window.location.pathname;
+			if (href === currentURL) {
+				event.preventDefault();  // prevent the default action (reload) if already on the page
 			}
-
-			let allSites = document.querySelectorAll('.detailed-table[data-site]');
-			for(const site of allSites){
-				let siteAttr = site.getAttribute('data-site');
-				// console.log(siteAttr);
-				let allVisible = site.querySelectorAll('tbody>tr.visible').length;
-				// console.log(visible_length);
-				// document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
-
-				// Hides all the rows without results
-				if(allVisible > 0){
-					document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
-					document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "table-row";
-				}else{
-					document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "none";
-				}
-			}
-		}, 300);
+		});
 	});
+
+	if(document.getElementById('searchForm')){
+
+		// Prevent page reload on form submit
+		document.getElementById('searchForm').addEventListener('submit', function(event) {
+			event.preventDefault();
+		});
+		// COOKIES SEARCH INPUT
+		const searchInput = document.getElementById("default-search");
+		// store name elements in array-like object
+		const namesFromDOM = document.getElementsByClassName("cookie_row");
+		// listen for user events
+
+		let timeout;
+		searchInput.addEventListener("keyup", (event) => {
+			clearTimeout(timeout);
+			timeout = setTimeout(function() {
+				const { value } = event.target;
+
+				// get user search input converted to lowercase
+				const searchQuery = value.toLowerCase();
+
+				for (const nameElement of namesFromDOM) {
+					// store name text and convert to lowercase
+					let name = nameElement.textContent.toLowerCase();
+					// compare current name to search input
+					if (name.includes(searchQuery)) {
+						// found name matching search, display it
+						nameElement.classList.add("visible");
+						nameElement.style.display = "table-row";
+					} else {
+						// no match, don't display name
+						nameElement.classList.remove("visible");
+						nameElement.style.display = "none";
+					}
+				}
+
+				let allSites = document.querySelectorAll('.detailed-table[data-site]');
+				for(const site of allSites){
+					let siteAttr = site.getAttribute('data-site');
+					// console.log(siteAttr);
+					let allVisible = site.querySelectorAll('tbody>tr.visible').length;
+					// console.log(visible_length);
+					// document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
+
+					// Hides all the rows without results
+					if(allVisible > 0){
+						document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
+						document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "table-row";
+					}else{
+						document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "none";
+					}
+				}
+			}, 300);
+		});
+
+
+
+
+	}
+
 });
 

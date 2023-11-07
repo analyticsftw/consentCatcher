@@ -3,15 +3,21 @@ import secrets
 import pandas as pd
 import json
 
-
-from google.cloud import bigquery
 from flask import Flask, redirect, url_for, session, render_template
 from flask_oauthlib.client import OAuth
 
+
+import bigquery_queries
+
 from google.cloud import secretmanager
+from extensions import cache
+
 
 
 app = Flask(__name__)
+cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
+
+
 
 app.secret_key = secrets.token_hex(16)
 oauth = OAuth(app)
@@ -30,8 +36,6 @@ def get_secret(project_id, secret_id, version_id="latest"):
 
 # Get the secret.
 secret_value = get_secret(project_id, secret_id)
-
-
 
 
 google = oauth.remote_app(
@@ -81,58 +85,58 @@ def authorized():
 def get_google_oauth_token():
     return session.get('google_token')
 
-
-@app.route('/home')
+@app.route('/index')
 def home():
     if 'google_token' in session:
         user_info = google.get('userinfo')
         if user_info.status == 200:
             print(user_info.data)
 
-            client = bigquery.Client()
+            return render_template('index.html',user=user_info.data)
+    else:
+            # Handle HTTP error from Google API
+            return redirect(url_for('login'))
 
-            # query = """
-            #     SELECT
-            #         distinct
-            #         cookie_siteURL,
-            #         count(cookie_name) AS total_cookies,
-            #         MAX(DATE(cookie_date)) AS last_scan
-            #     FROM
-            #         `diageo-cookiebase.cookie_scan.cookies`
-            #     GROUP BY 1
-            # """
 
-            query = """
-                SELECT *
-                FROM `diageo-cookiebase.cookie_scan.cookies`
-            """
+@app.route('/cache-keys')
+def cache_keys():
+    return str(cache.cache._cache.keys())
 
-            query_job = client.query(query)
-            all_cookies = query_job.to_dataframe()
+
+@app.route('/scan-summary')
+def scan_summary():
+    if 'google_token' in session:
+        user_info = google.get('userinfo')
+        if user_info.status == 200:
+            print(user_info.data)
+
+
+            all_cookies = bigquery_queries.all_cookies()
             all_cookies_headers = all_cookies.columns.tolist()
 
             summary_df =  all_cookies.groupby('cookie_siteURL').agg(
-                total_cookies = pd.NamedAgg(column='cookie_name', aggfunc='count')
+                total_cookies = pd.NamedAgg(column='cookie_name', aggfunc='count'), last_scan = pd.NamedAgg(column='last_scan', aggfunc='max')
             ).reset_index()
 
             summary_dict = summary_df.to_dict(orient='records')
             summary_headers =  summary_df.columns.tolist()
 
             # list of columns to pull from results
-            detailed_data_columns = ['cookie_name','cookie_siteURL', 'cookie_phase','cookie_sameSite', 'cookie_value','cookie_domain','cookie_path','cookie_expires','cookie_httpOnly','cookie_secure']
+            detailed_data_columns = ['cookie_name','cookie_vendor','cookie_siteURL', 'cookie_phase', 'cookie_value','cookie_domain']
             detailed_data_df = all_cookies[detailed_data_columns]
             # renaming columns
             detailed_data_renamed = detailed_data_df.rename(columns={
                 'cookie_name':'Name',
+                'cookie_vendor': 'Vendor',
                 'cookie_siteURL':'Site URL',
                 'cookie_phase' : 'Phase',
-                'cookie_sameSite': 'SameSite',
+                # 'cookie_sameSite': 'SameSite',
                 'cookie_value' : 'Value',
-                'cookie_domain': 'Domain',
-                'cookie_path' : 'Path',
-                'cookie_expires' : 'Expires',
-                'cookie_httpOnly' : 'HttpOnly',
-                'cookie_secure' : 'Secure'
+                'cookie_domain': 'Domain'
+                # 'cookie_path' : 'Path',
+                # 'cookie_expires' : 'Expires',
+                # 'cookie_httpOnly' : 'HttpOnly',
+                # 'cookie_secure' : 'Secure'
             })
             detailed_headers = detailed_data_renamed.columns.tolist()
 
@@ -159,10 +163,8 @@ def home():
             # print(headers)
 
             user_info = google.get('userinfo')
-            return render_template('index.html', summary_headers=summary_headers, detailed_headers=detailed_headers, summary_data=summary_dict, detailed_data=detailed_data,  user=user_info.data, page='Cookie Scan Summary')
+            return render_template('scan_summary.html', summary_headers=summary_headers, detailed_headers=detailed_headers, summary_data=summary_dict, detailed_data=detailed_data,  user=user_info.data, page='Cookie Scan Summary')
 
-            # user_info = google.get('userinfo')
-            # return render_template('index.html', user=user_info.data)
         else:
             # Handle HTTP error from Google API
             return redirect(url_for('login'))
@@ -170,26 +172,9 @@ def home():
         # User is not logged in
         return redirect(url_for('login'))
 
-@app.route('/fetch_data', methods=['POST'])
-def fetch_data():
+# @app.route('/categories')
+# def categories():
 
-    client = bigquery.Client()
-
-    query = """
-        SELECT *
-        FROM `diageo-cookiebase.cookie_scan.cookies`
-    """
-    query_job = client.query(query)
-    results = query_job.result()
-
-    headers = [schema_field.name for schema_field in results.schema]
-    data = [dict(row) for row in results]
-
-    # print(data)
-    # print(headers)
-
-    user_info = google.get('userinfo')
-    return render_template('index.html', headers=headers,   data=data, user=user_info.data)
 
 if __name__ == '__main__':
     app.run(debug=True)
