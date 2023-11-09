@@ -68,7 +68,8 @@ document.addEventListener("DOMContentLoaded", function () {
 		// COOKIES SEARCH INPUT
 		const searchInput = document.getElementById("default-search");
 		// store name elements in array-like object
-		const namesFromDOM = document.getElementsByClassName("cookie_row");
+		// const namesFromDOM = document.getElementsByClassName("cookie_row");
+		const namesFromDOM = document.querySelectorAll("tbody>tr");
 		// listen for user events
 
 		let timeout;
@@ -94,23 +95,37 @@ document.addEventListener("DOMContentLoaded", function () {
 						nameElement.style.display = "none";
 					}
 				}
+				if(document.location.pathname == '/scan-summary'){
+					let allSites = document.querySelectorAll('.detailed-table[data-site]');
+					for(const site of allSites){
+						let siteAttr = site.getAttribute('data-site');
+						// console.log(siteAttr);
+						let allVisible = site.querySelectorAll('tbody>tr.visible').length;
+						// console.log(visible_length);
+						// document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
 
-				let allSites = document.querySelectorAll('.detailed-table[data-site]');
-				for(const site of allSites){
-					let siteAttr = site.getAttribute('data-site');
-					// console.log(siteAttr);
-					let allVisible = site.querySelectorAll('tbody>tr.visible').length;
-					// console.log(visible_length);
-					// document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
-
-					// Hides all the rows without results
-					if(allVisible > 0){
-						document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
-						document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "table-row";
-					}else{
-						document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "none";
+						// Hides all the rows without results
+						if(allVisible > 0){
+							document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
+							document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "table-row";
+						}else{
+							document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "none";
+						}
 					}
 				}
+				// else if(document.location.pathname == '/scan-errors'){
+				// 	let allVisible = site.querySelectorAll('tbody>tr.visible').length;
+				// 	// console.log(visible_length);
+				// 	// document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"] td.column_total_cookies').innerText = allVisible;
+
+				// 	// Hides all the rows without results
+				// 	if(allVisible > 0){
+				// 		document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "table-row";
+				// 	}else{
+				// 		document.querySelector('.siteCookiesRow[data-site="'+ siteAttr + '"]').style.display = "none";
+				// 	}
+				// }
+
 			}, 300);
 		});
 

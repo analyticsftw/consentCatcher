@@ -79,6 +79,8 @@ const { chromium } = require("playwright");
       // sf.logHit(filename,"\n");
 
       await page.goto(`https://${myURL}`, { timeout: 100000 });
+      await page.waitForLoadState("networkidle", { timeout: 200000 });
+
       cookies = await context.cookies();
       var cl = 0;
       cl = cookies.length;
@@ -104,8 +106,7 @@ const { chromium } = require("playwright");
         cookies[i].siteURL = page.url();
       }
 
-      //Increased timeout,  some pages that take longer
-      await page.waitForLoadState("networkidle", { timeout: 150000 });
+
 
       if (cookies.length > 0) {
         sf.cookie2csv(cookies, filename, "consent");
@@ -136,22 +137,46 @@ const { chromium } = require("playwright");
               selector: "#age_select_year_of_birth",
               value: "1970",
               displayValue: "year",
+              type: 'fill'
             },
             {
               selector: "#age_select_month_of_birth",
               value: "01",
               displayValue: "month",
+              type: 'fill'
             },
             {
               selector: "#age_select_day_of_birth",
               value: "01",
               displayValue: "day",
+              type: 'fill'
+            },
+            {
+              selector: "#age_select_year",
+              value: "1970",
+              displayValue: "year",
+              type: 'select'
+            },
+            {
+              selector: "#age_select_month",
+              value: "January",
+              displayValue: "month",
+              type: 'select'
+            },
+            {
+              selector: "#age_select_day",
+              value: "1",
+              displayValue: "day",
+              type: 'select'
             },
           ];
 
           for (let element of elements) {
-            if (await page.isVisible(element.selector)) {
+            if (await page.isVisible(element.selector) && element.type == 'fill') {
               await page.fill(element.selector, element.value);
+              fields_visible.push(element.displayValue);
+            }else if (await page.isVisible(element.selector) && element.type == 'select') {
+              await page.selectOption(element.selector, element.value);
               fields_visible.push(element.displayValue);
             }
           }
@@ -171,6 +196,9 @@ const { chromium } = require("playwright");
       }else{
         agegate_phase = 'agegage_not_found'
       }
+
+      //Increased timeout,  some pages that take longer
+      await page.waitForLoadState("networkidle", { timeout: 200000 });
 
       cookies = await context.cookies();
       for (i = 0; i < cookies.length; i++) {

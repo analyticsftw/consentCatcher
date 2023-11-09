@@ -24,3 +24,25 @@ def all_cookies():
     query_job = client.query(query)
     all_cookies = query_job.to_dataframe()
     return all_cookies
+
+@cache.memoize(timeout=300)
+def scan_errors():
+    # This query selects only the cookies from the last scan performed on each site
+    query = """
+        SELECT
+        *,
+        DATE(date) AS last_scan
+        FROM (
+        SELECT
+            *,
+            DENSE_RANK() OVER(PARTITION BY site_url ORDER BY DATE(date) DESC) AS scan_number
+        FROM
+            `diageo-cookiebase.cookie_scan.cookie_scan_errors_clean`
+        )
+        WHERE scan_number = 1
+        ORDER BY site_url, date
+    """
+
+    query_job = client.query(query)
+    all_cookies = query_job.to_dataframe()
+    return all_cookies

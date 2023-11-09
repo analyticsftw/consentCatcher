@@ -28,7 +28,7 @@ var internal = module.exports = {
  * @param {*} filename
  * @param {*} phase
  */
-   function cookie2csv  (cookie,filename,phase="before") {
+   function cookie2csv  (cookie,filename,phase="phase_undefined") {
     const { Parser } = require('json2csv');
     const fields = [
       'date',
