@@ -16,7 +16,7 @@ def all_cookies():
             DENSE_RANK() OVER(PARTITION BY cookie_siteURL ORDER BY DATE(cookie_date) desc) AS scan_number
             FROM
                 `diageo-cookiebase.cookie_scan.cookies_with_vendor`
-            GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
+            GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
         )WHERE scan_number = 1
         ORDER BY cookie_siteURL, cookie_date
     """
@@ -44,5 +44,18 @@ def scan_errors():
     """
 
     query_job = client.query(query)
-    all_cookies = query_job.to_dataframe()
-    return all_cookies
+    scan_errors = query_job.to_dataframe()
+    return scan_errors
+
+# @cache.memoize(timeout=300)
+# def categories():
+#     # This query selects only the cookies from the last scan performed on each site
+#     query = """
+#         SELECT
+#             DISTINCT  cookie_name
+#         FROM `diageo-cookiebase.cookie_scan.cookies`
+#     """
+
+#     query_job = client.query(query)
+#     categories = query_job.to_dataframe()
+#     return categories

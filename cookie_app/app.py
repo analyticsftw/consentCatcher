@@ -122,7 +122,7 @@ def scan_summary():
             summary_headers =  summary_df.columns.tolist()
 
             # list of columns to pull from results
-            detailed_data_columns = ['cookie_name','cookie_vendor','cookie_siteURL', 'cookie_phase', 'cookie_value','cookie_domain']
+            detailed_data_columns = ['cookie_name','cookie_vendor','cookie_siteURL', 'cookie_phase', 'cookie_value','cookie_domain', 'expires_in_time']
             detailed_data_df = all_cookies[detailed_data_columns]
             # renaming columns
             detailed_data_renamed = detailed_data_df.rename(columns={
@@ -132,11 +132,13 @@ def scan_summary():
                 'cookie_phase' : 'Phase',
                 # 'cookie_sameSite': 'SameSite',
                 'cookie_value' : 'Value',
-                'cookie_domain': 'Domain'
+                'cookie_domain': 'Domain',
                 # 'cookie_path' : 'Path',
                 # 'cookie_expires' : 'Expires',
                 # 'cookie_httpOnly' : 'HttpOnly',
                 # 'cookie_secure' : 'Secure'
+                'expires_in_time': 'Expiration time'
+
             })
             detailed_headers = detailed_data_renamed.columns.tolist()
 
@@ -196,6 +198,33 @@ def scan_errors():
     else:
         # User is not logged in
         return redirect(url_for('login'))
+
+# @app.route('/categories')
+# def categories():
+#     if 'google_token' in session:
+#         user_info = google.get('userinfo')
+#         if user_info.status == 200:
+
+#             categories = ['Analytics', 'Marketing', 'Personalization', 'Other']
+
+
+#             scan_errors = bigquery_queries.scan_errors()
+#             scan_errors_data = scan_errors[['site_url','error_clean', 'last_scan' ]]
+#             scan_errors_data_dict = scan_errors_data.to_dict(orient='records')
+#             print(scan_errors_data_dict)
+
+#             errors_table_headers = scan_errors_data.columns.tolist()
+#             print(errors_table_headers)
+
+
+#             user_info = google.get('userinfo')
+#             return render_template('scan_errors.html', errors_headers=errors_table_headers, errors_data=scan_errors_data_dict, user=user_info.data, page='Cookie Scan Errors', show_search_bar=True )
+#         else:
+#         # Handle HTTP error from Google API
+#             return redirect(url_for('login'))
+#     else:
+#         # User is not logged in
+#         return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)
