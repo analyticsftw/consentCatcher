@@ -199,32 +199,31 @@ def scan_errors():
         # User is not logged in
         return redirect(url_for('login'))
 
-# @app.route('/categories')
-# def categories():
-#     if 'google_token' in session:
-#         user_info = google.get('userinfo')
-#         if user_info.status == 200:
+@app.route('/cookie-categories')
+def cookie_categories():
+    if 'google_token' in session:
+        user_info = google.get('userinfo')
+        if user_info.status == 200:
+            print(user_info.data)
 
-#             categories = ['Analytics', 'Marketing', 'Personalization', 'Other']
+            cookie_categories = bigquery_queries.cookie_categories()
+            cookie_categories_data = cookie_categories[['cookie_siteURL','cookie_name','cookie_category', 'cookie_description', 'suggested_category', 'suggested_description' ]]
+            cookie_categories_data_dict = cookie_categories.to_dict(orient='records')
+            print(cookie_categories_data_dict)
 
-
-#             scan_errors = bigquery_queries.scan_errors()
-#             scan_errors_data = scan_errors[['site_url','error_clean', 'last_scan' ]]
-#             scan_errors_data_dict = scan_errors_data.to_dict(orient='records')
-#             print(scan_errors_data_dict)
-
-#             errors_table_headers = scan_errors_data.columns.tolist()
-#             print(errors_table_headers)
+            cookie_categories_headers = cookie_categories_data.columns.tolist()
+            print(cookie_categories_headers)
 
 
-#             user_info = google.get('userinfo')
-#             return render_template('scan_errors.html', errors_headers=errors_table_headers, errors_data=scan_errors_data_dict, user=user_info.data, page='Cookie Scan Errors', show_search_bar=True )
-#         else:
-#         # Handle HTTP error from Google API
-#             return redirect(url_for('login'))
-#     else:
-#         # User is not logged in
-#         return redirect(url_for('login'))
+            user_info = google.get('userinfo')
+            return render_template('cookie_categories.html', cookie_categories_headers=cookie_categories_headers, cookie_categories_data=cookie_categories_data_dict, user=user_info.data, page='Cookie Categories', show_search_bar=True )
+        else:
+        # Handle HTTP error from Google API
+            return redirect(url_for('login'))
+    else:
+        # User is not logged in
+        return redirect(url_for('login'))
+
 @app.route('/cookie-sources')
 def cookie_sources():
     if 'google_token' in session:

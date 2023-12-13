@@ -1176,6 +1176,18 @@ input[type="range"]::-ms-fill-lower {
   min-width: 100%;
 }
 
+.min-w-\[300px\] {
+  min-width: 300px;
+}
+
+.min-w-\[350px\] {
+  min-width: 350px;
+}
+
+.min-w-\[380px\] {
+  min-width: 380px;
+}
+
 .max-w-7xl {
   max-width: 80rem;
 }
@@ -1202,6 +1214,19 @@ input[type="range"]::-ms-fill-lower {
 
 .max-w-md {
   max-width: 28rem;
+}
+
+.max-w-fit {
+  max-width: -moz-fit-content;
+  max-width: fit-content;
+}
+
+.max-w-\[100px\] {
+  max-width: 100px;
+}
+
+.max-w-\[300px\] {
+  max-width: 300px;
 }
 
 .flex-shrink-0 {
