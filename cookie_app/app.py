@@ -225,6 +225,31 @@ def scan_errors():
 #     else:
 #         # User is not logged in
 #         return redirect(url_for('login'))
+@app.route('/cookie-sources')
+def cookie_sources():
+    if 'google_token' in session:
+        user_info = google.get('userinfo')
+        if user_info.status == 200:
+            print(user_info.data)
+
+            cookie_sources = bigquery_queries.cookie_sources()
+            cookie_sources_data = cookie_sources[['site_scanned','cookie_siteURL','cookie_name', 'cookie_source' ]]
+            cookie_sources_data_dict = cookie_sources.to_dict(orient='records')
+            print(cookie_sources_data_dict)
+
+            cookie_sources_headers = cookie_sources_data.columns.tolist()
+            print(cookie_sources_headers)
+
+
+            user_info = google.get('userinfo')
+            return render_template('cookie_sources.html', cookie_sources_headers=cookie_sources_headers, cookie_sources_data=cookie_sources_data_dict, user=user_info.data, page='Cookie Sources', show_search_bar=True )
+        else:
+        # Handle HTTP error from Google API
+            return redirect(url_for('login'))
+    else:
+        # User is not logged in
+        return redirect(url_for('login'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)

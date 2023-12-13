@@ -47,6 +47,19 @@ def scan_errors():
     scan_errors = query_job.to_dataframe()
     return scan_errors
 
+@cache.memoize(timeout=300)
+def cookie_sources():
+    # This query selects only the cookies from the last scan performed on each site
+    query = """
+        SELECT
+            *
+        FROM
+            `diageo-cookiebase.cookie_scan.cookie_scan_sources`
+    """
+    query_job = client.query(query)
+    scan_errors = query_job.to_dataframe()
+    return scan_errors
+
 # @cache.memoize(timeout=300)
 # def categories():
 #     # This query selects only the cookies from the last scan performed on each site

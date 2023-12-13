@@ -121,6 +121,28 @@ function error2csv(filename,url, errorMessage){
  }
 }
 
+function source2csv(filename, sources){
+  const { Parser } = require('json2csv');
+  const newLine = '\r\n';
+  const fields = ['site_scanned', 'cookie_siteURL', 'cookie_name', 'cookie_sources'];
+
+  // Add the additional parameter to each source object
+  // const updatedSources = sources.map(source => ({
+  //   ...source,
+  //   cookie_siteURL: siteURL
+  // }));
+
+  const json2csvParser = new Parser({ fields, header: false });
+  const csv = json2csvParser.parse(sources) + newLine;
+
+  try {
+    fs.appendFileSync(filename, csv);
+    console.log('Data was appended to file!');
+  } catch (error) {
+    console.error('Error appending data to file:', error);
+  }
+}
+
 
 /**
  * logHit: function to write message to file
@@ -218,6 +240,7 @@ module.exports = {
   logHit,
   google_sheets_read,
   error2csv,
+  source2csv,
   appendToBigQuery
 }
 

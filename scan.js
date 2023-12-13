@@ -45,18 +45,21 @@ const { chromium } = require("playwright");
     console.log("No data found.");
   }
 
-  // test_loop = ["www.mortlach.com.tw"]
+  // test_loop = ["www.guinness.com"]
 
   let browser, page, context;
   // for (let myURL of test_loop){
+
   for (let myURL of urlsList) {
     try {
+      let cookieSource = []
       const newscan = "";
       console.log("Starting scan for " + myURL);
       startTime = new Date();
 
       browser = await chromium.launch({
-        headless: true,
+        headless: false,
+        args: ['--auto-open-devtools-for-tabs']
       });
 
       context = await browser.newContext({
@@ -64,6 +67,70 @@ const { chromium } = require("playwright");
         timeout: 10000,
       });
       page = await context.newPage();
+
+      //     // Listen for console events and log them to the terminal
+      // page.on('console', msg => {
+      //   // Filter or format messages as needed
+      //   console.log(`[Page Console ${msg.type()}]:`, msg.text());
+      // });
+
+
+      page.on('console', msg => {
+        if (msg.type() === 'info' && msg.text().startsWith('CookieSource:')) {
+            const cookieData = JSON.parse(msg.text().substring('CookieSource:'.length));
+            cookieSource.push(cookieData);
+        }
+      });
+
+      // Injects script to the page that replaces document.cookie method
+      await page.addInitScript(() => {
+        let cookieObject = {};
+        const originalCookieDescriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
+        if (originalCookieDescriptor) {
+          const originalSet = originalCookieDescriptor.set;
+
+          Object.defineProperty(document, 'cookie', {
+            ...originalCookieDescriptor,
+            set: function(value) {
+              // Log the entire cookie string
+              const regex = /https?:\/\/[\w\-._~\/#]+(?<!:\d+)/g;
+              const cookieName = value.split('=')[0];
+              cookieObject['cookie_siteURL'] = document.location.href;              ;
+              cookieObject['cookie_name'] = cookieName;
+
+              // Capture the stack trace
+              const stackTrace = new Error().stack;
+
+              // Split the stack trace into an array of lines
+              const stackArray = stackTrace.split('\n').map(line => line.trim());
+              const matches = stackArray.flatMap(log => log.match(regex) || []);
+              const uniqueMatches = [...new Set(matches)];
+
+              cookieObject['cookie_sources'] = uniqueMatches;
+              // cookieSource.push(cookieObject)
+
+              //The cookie has to be log  in the console to then be captured
+              console.info('CookieSource:' + JSON.stringify(cookieObject));
+
+
+
+              // Log the stack array for
+              console.log(`Cookie set: ${cookieName}`);
+              console.log(uniqueMatches);
+
+              // Call the original setter
+              originalSet.call(this, value);
+            }
+          });
+        }
+      });
+
+      page.on('response', async response => {
+        const setCookieHeader = response.headers()['set-cookie'];
+        if (setCookieHeader) {
+          console.log(`HTTP Header Cookie set: ${setCookieHeader}`);
+        }
+      });
 
       /*
       // Log and continue all network requests
@@ -79,9 +146,17 @@ const { chromium } = require("playwright");
       // sf.logHit(filename,"\n");
 
       await page.goto(`https://${myURL}`, { timeout: 100000 });
+
+      //  // Apply debugAccess to document.cookie
+      // await page.evaluate(() => {
+      //   debugAccess(document, 'cookie');
+      // });
+
       await page.waitForLoadState("networkidle", { timeout: 200000 });
 
       cookies = await context.cookies();
+
+      console.log(cookies)
       var cl = 0;
       cl = cookies.length;
       for (i = 0; i < cl; i++) {
@@ -213,11 +288,43 @@ const { chromium } = require("playwright");
       endTime = new Date();
       scanTime = endTime - startTime;
       console.log("Scanned " + myURL + " in " + scanTime + "s");
+      await page.waitForTimeout(10000);
+
+
+      const deduplicatedCookies = Object.values(cookieSource.reduce((acc, { cookie_siteURL, cookie_name, cookie_sources}) => {
+        if (!acc[cookie_name]) {
+            acc[cookie_name] = {cookie_siteURL, cookie_name, cookie_sources: new Set(cookie_sources)};
+        } else {
+            cookie_sources.forEach(source => acc[cookie_name].cookie_sources.add(source));
+        }
+        return acc;
+      }, {})).map(({cookie_siteURL, cookie_name, cookie_sources}) => ({
+        site_scanned : myURL,
+        cookie_siteURL,
+        cookie_name,
+        cookie_sources: Array.from(cookie_sources).join(' | '),
+      }));
+
+      console.log(deduplicatedCookies)
+
+
+
+
+      sf.source2csv('diageo_cookies_sources.csv',deduplicatedCookies)
+
+
     } catch (error) {
       console.error("An error occurred:", error.message);
       sf.error2csv(errorsFilename, myURL, error.message);
     } finally {
       if (browser) {
+        // console.log(cookieSource)
+        // const uniqueSources = Array.from(new Set(cookieSource.map(JSON.stringify))).map(JSON.parse);
+        // console.log('deduplicated sources')
+        // console.log(uniqueSources)
+        // console.log('merged sources')
+
+        // console.log(deduplicatedCookies)
         await page.close();
         await context.close();
         await browser.close();
@@ -226,9 +333,6 @@ const { chromium } = require("playwright");
   }
   //TODO update scan time
   sf.appendToBigQuery("cookie_scan", "cookies", "diageo_cookies.csv");
-  sf.appendToBigQuery(
-    "cookie_scan",
-    "cookie_scan_errors",
-    "diageo_cookies_errors.csv"
-  );
+  sf.appendToBigQuery("cookie_scan","cookie_scan_errors","diageo_cookies_errors.csv");
+  sf.appendToBigQuery("cookie_scan","cookie_scan_sources", "diageo_cookies_sources.csv")
 })();
