@@ -56,13 +56,16 @@
       <td class="column_cookie_categories_suggested_category px-6 py-4 font-medium text-gray-900 dark:text-white break-words max-w-[100px]">{{ row['suggested_category']}}</td>
       <td class="column_cookie_categories_description px-6 py-4 font-medium text-gray-900 dark:text-white break-words min-w-[380px]">{{ row['suggested_description'] }}</td>
       <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white max-w-sm flex flex-col">
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2">
-            Set Category
-        </button>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Set Description
-        </button>
-    </td>
+        {% if row['cookie_category'] == 'Unknown' %}
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2">
+                Set Category
+            </button>
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Set Description
+            </button>
+        {% endif %}
+      </td>
+
 
 
     </tr>
