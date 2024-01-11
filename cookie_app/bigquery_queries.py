@@ -16,7 +16,7 @@ def all_cookies():
             DENSE_RANK() OVER(PARTITION BY cookie_siteURL ORDER BY DATE(cookie_date) desc) AS scan_number
             FROM
                 `diageo-cookiebase.cookie_scan.cookies_with_vendor`
-            GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+            GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
         )WHERE scan_number = 1
         ORDER BY cookie_siteURL, cookie_date
     """
