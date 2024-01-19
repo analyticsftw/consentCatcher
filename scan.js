@@ -58,7 +58,7 @@ const { chromium } = require("playwright");
       startTime = new Date();
 
       browser = await chromium.launch({
-        headless: false,
+        headless: true,
         args: ['--auto-open-devtools-for-tabs']
       });
 
@@ -288,7 +288,7 @@ const { chromium } = require("playwright");
       endTime = new Date();
       scanTime = endTime - startTime;
       console.log("Scanned " + myURL + " in " + scanTime + "s");
-      await page.waitForTimeout(10000);
+      await page.waitForTimeout(5000);
 
 
       const deduplicatedCookies = Object.values(cookieSource.reduce((acc, { cookie_siteURL, cookie_name, cookie_sources}) => {
