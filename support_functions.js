@@ -196,6 +196,7 @@ async function google_sheets_read (sheetId, range){
 }
 
 async function appendToBigQuery(datasetId, tableId, filename){
+  console.log("appending " + filename)
   const { BigQuery } = require('@google-cloud/bigquery');
   const bigquery = new BigQuery(await getSecret('projects/191126329179/secrets/consent_catcher/versions/1'), { projectId: 'your-project-id' });
 
@@ -218,7 +219,7 @@ async function appendToBigQuery(datasetId, tableId, filename){
     if (errors && errors.length > 0) {
       throw new Error('BigQuery job failed');
     }
-    console.log('CSV data loaded successfully.');
+    console.log(filename + ' loaded successfully.');
   }
 
   loadCSVData().catch(console.error);

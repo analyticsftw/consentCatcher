@@ -47,7 +47,7 @@ const { chromium } = require("playwright");
 
   // test_loop = ["www.guinness.com"]
 
-  let browser, page, context;
+  // let browser, page, context;
   // for (let myURL of test_loop){
 
   for (let myURL of urlsList) {
@@ -273,7 +273,7 @@ const { chromium } = require("playwright");
       }
 
       //Increased timeout,  some pages that take longer
-      await page.waitForLoadState("networkidle", { timeout: 200000 });
+      await page.waitForLoadState("networkidle", { timeout: 100000 });
 
       cookies = await context.cookies();
       for (i = 0; i < cookies.length; i++) {

@@ -16,7 +16,7 @@ def all_cookies():
             DENSE_RANK() OVER(PARTITION BY cookie_siteURL ORDER BY DATE(cookie_date) desc) AS scan_number
             FROM
                 `diageo-cookiebase.cookie_scan.cookies_with_vendor`
-            GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+            GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
         )WHERE scan_number = 1
         ORDER BY cookie_siteURL, cookie_date
     """
@@ -30,17 +30,21 @@ def scan_errors():
     # This query selects only the cookies from the last scan performed on each site
     query = """
         SELECT
-        *,
-        DATE(date) AS last_scan
-        FROM (
-        SELECT
-            *,
-            DENSE_RANK() OVER(PARTITION BY site_url ORDER BY DATE(date) DESC) AS scan_number
-        FROM
-            `diageo-cookiebase.cookie_scan.cookie_scan_errors_clean`
-        )
-        WHERE scan_number = 1
-        ORDER BY site_url, date
+            distinct
+            * EXCEPT(date, scan_number),
+            --
+            DATE(date) AS error_date
+            -- date
+            FROM (
+            SELECT
+                date, site_url,error_clean,
+                DENSE_RANK() OVER(PARTITION BY site_url ORDER BY date DESC) AS scan_number
+            FROM
+                `diageo-cookiebase.cookie_scan.cookie_scan_errors_clean` )
+            WHERE
+            scan_number = 1
+            ORDER BY
+            site_url
     """
 
     query_job = client.query(query)

@@ -182,7 +182,7 @@ def scan_errors():
             print(user_info.data)
 
             scan_errors = bigquery_queries.scan_errors()
-            scan_errors_data = scan_errors[['site_url','error_clean', 'last_scan' ]]
+            scan_errors_data = scan_errors[['site_url','error_clean', 'error_date' ]]
             scan_errors_data_dict = scan_errors_data.to_dict(orient='records')
             print(scan_errors_data_dict)
 
