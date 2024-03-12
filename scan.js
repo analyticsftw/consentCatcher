@@ -14,6 +14,13 @@ var sf = require("./support_functions.js");
 // start URL
 // var myArgs = process.argv.slice(2);
 // myURL = myArgs[0] ? myArgs[0] : "https://mightyhive.com/";
+
+
+const customSheet = process.argv[2];
+const sheetRange = process.argv[3];
+console.log('Third argument:', customSheet);
+console.log('Fourth argument:', sheetRange);
+
 // filename = myArgs[1] ?  myArgs[1] : "mightyhive_cookies.csv";
 //TODO: add support for passing start URL via command line or query string
 
@@ -26,29 +33,44 @@ const { chromium } = require("playwright");
 
 // Launching browser, everything below this is async
 (async () => {
+
   filename = "diageo_cookies.csv";
   errorsFilename = "diageo_cookies_errors.csv";
   //google_authentication authenticates to spreadsheet and returns payload:  google_sheets_read(sheet_id, range)
-  sheet_data = await sf.google_sheets_read(
-    "1VvSCITbbEWgFim0u75bzMydJh31bJxZDGkdyf7NPfTw",
-    "allsites!A:A"
-  );
+  let sheet_data;
+  try {
+    if(customSheet && sheetRange){
+      sheet_data = await sf.google_sheets_read(
+        customSheet,
+        sheetRange
+      )
+    }else{
+      sheet_data = await sf.google_sheets_read(
+        "1VvSCITbbEWgFim0u75bzMydJh31bJxZDGkdyf7NPfTw",
+        "allsites!A:A"
+      )
+    }
+      }catch (error) {
+        console.error("An error occurred:", error.message);
+        sf.error2csv(errorsFilename, myURL, error.message);
+    }
+
   // const rows = sheet_data.data.values;
   let urlsList = [];
   if (sheet_data.length) {
     // loop through column value skipping first row
     sheet_data.slice(1).forEach((row) => {
       urlsList.push(row[0]);
-      // console.log(row[0])
+      console.log(row[0])
     });
   } else {
     console.log("No data found.");
   }
 
-  // test_loop = ["www.guinness.com"]
+  // custom_scan_loop = [
 
   // let browser, page, context;
-  // for (let myURL of test_loop){
+  // for (let myURL of custom_scan_loop){
 
   for (let myURL of urlsList) {
     try {
@@ -59,7 +81,8 @@ const { chromium } = require("playwright");
 
       browser = await chromium.launch({
         headless: true,
-        args: ['--auto-open-devtools-for-tabs']
+        // open devtools:
+        // args: ['--auto-open-devtools-for-tabs']
       });
 
       context = await browser.newContext({
@@ -143,16 +166,44 @@ const { chromium } = require("playwright");
         return route.continue();
       });
       */
-      // sf.logHit(filename,"\n");
 
-      await page.goto(`https://${myURL}`, { timeout: 100000 });
+
+      // sf.logHit(filename,"\n");
+      // const navigationPromise = page.waitForNavigation();
+      // await page.goto(`https://${myURL}`, { timeout: 100000 });
+      // await navigationPromise;
+
+
+      // Set a reasonable timeout for waiting for potential redirection.
+      // This should be long enough to catch the redirection but not too long to cause unnecessary delays.
+      const navigationTimeout = 8000; // Adjust based on expected navigation time
+
+      // Navigate to the initial URL and simultaneously prepare to handle potential redirection.
+      const navigationPromise = page.goto(`https://${myURL}`, { waitUntil: 'domcontentloaded' }).catch(e => e);
+      const waitForRedirect = page.waitForNavigation({
+        waitUntil: 'networkidle',
+        timeout: navigationTimeout
+      }).catch(e => {`error opening ${myURL}` });
+
+      // Wait for either the initial navigation or the redirection to complete.
+      // Using Promise.allSettled to ensure we wait for both promises but ignore rejections due to timeout.
+      await Promise.allSettled([navigationPromise, waitForRedirect]);
+
 
       //  // Apply debugAccess to document.cookie
       // await page.evaluate(() => {
       //   debugAccess(document, 'cookie');
       // });
 
-      await page.waitForLoadState("networkidle", { timeout: 200000 });
+
+      try{
+        await page.waitForLoadState("networkidle", { timeout: 200000 });
+      } catch (error) {
+        console.error("An error occurred:", error.message);
+        sf.error2csv(errorsFilename, myURL, error.message);
+      }
+
+      await page.waitForTimeout(5000);
 
       cookies = await context.cookies();
 
@@ -169,9 +220,13 @@ const { chromium } = require("playwright");
       if (cookies.length > 0) {
         sf.cookie2csv(cookies, filename, "pageload");
       }
-
+      const navigationPromiseOT = page.waitForNavigation().catch(e => e);
+      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000)); // 5 seconds timeout
       // check for OT consent:
       await page.click("#onetrust-accept-btn-handler");
+      await Promise.race([navigationPromiseOT, timeoutPromise]);
+
+      await page.waitForTimeout(5000);
       //await page.click('#accept-all-cookies');
       cookies = await context.cookies();
       var cl = 0;
@@ -255,7 +310,10 @@ const { chromium } = require("playwright");
               fields_visible.push(element.displayValue);
             }
           }
+          const navigationPromiseAge = page.waitForNavigation().catch(e => e);
+          const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000)); // 5 seconds timeout
           await page.click("#age_confirm_btn");
+          await Promise.race([navigationPromiseAge, timeoutPromise]);
         } else {
           fields_visible.push("none");
         }
@@ -273,7 +331,29 @@ const { chromium } = require("playwright");
       }
 
       //Increased timeout,  some pages that take longer
-      await page.waitForLoadState("networkidle", { timeout: 100000 });
+      try{
+        await page.waitForLoadState("networkidle", { timeout: 100000 });
+      } catch (error) {
+        console.error("An error occurred:", error.message);
+        sf.error2csv(errorsFilename, myURL, error.message);
+      }
+
+      await page.evaluate(() => {
+        return new Promise((resolve) => {
+          var totalHeight = 0;
+          var distance = 100; // Adjust the distance to scroll each step
+          var timer = setInterval(() => {
+            window.scrollBy(0, distance);
+            totalHeight += distance;
+            if(totalHeight >= document.body.scrollHeight){
+              clearInterval(timer);
+              resolve();
+            }
+          }, 100); // Adjust the time interval between scrolls
+        });
+      });
+
+      await page.waitForTimeout(10000);
 
       cookies = await context.cookies();
       for (i = 0; i < cookies.length; i++) {
@@ -335,4 +415,5 @@ const { chromium } = require("playwright");
   sf.appendToBigQuery("cookie_scan", "cookies", "diageo_cookies.csv");
   sf.appendToBigQuery("cookie_scan","cookie_scan_errors","diageo_cookies_errors.csv");
   sf.appendToBigQuery("cookie_scan","cookie_scan_sources", "diageo_cookies_sources.csv")
+
 })();
