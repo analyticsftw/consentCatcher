@@ -1,0 +1,25 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - build
+    - -t
+    - europe-docker.pkg.dev/diageo-cookiebase/simple-cookie-scan/first_scan:latest
+    - .
+
+  # Docker push to Google Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - push
+    - europe-docker.pkg.dev/diageo-cookiebase/simple-cookie-scan/first_scan:latest
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+    - run
+    - deploy 
+    - 'cookie-scan' 
+    - '--image'
+    - 'europe-docker.pkg.dev/diageo-cookiebase/simple-cookie-scan/first_scan:latest' 
+    - '--region' 
+    - 'europe-west4'
+images:
+  - europe-docker.pkg.dev/diageo-cookiebase/simple-cookie-scan/first_scan:latest
