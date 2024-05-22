@@ -1,0 +1,25 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - build
+    - -t
+    - europe-west4-docker.pkg.dev/diageo-cookiebase/consent-catcher/cookie_scan:latest
+    - .
+
+  # Docker push to Google Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - push
+    - europe-west4-docker.pkg.dev/diageo-cookiebase/consent-catcher/cookie_scan:latest
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+    - run
+    - deploy 
+    - 'cookie-scan' 
+    - '--image'
+    - 'europe-west4-docker.pkg.dev/diageo-cookiebase/consent-catcher/cookie_scan:latest' 
+    - '--region' 
+    - 'europe-west4'
+images:
+  - europe-west4-docker.pkg.dev/diageo-cookiebase/consent-catcher/cookie_scan:latest

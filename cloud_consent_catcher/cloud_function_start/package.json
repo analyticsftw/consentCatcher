@@ -1,0 +1,15 @@
+{
+  "name": "cloud_consent_catcher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "start_cookie_scan.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npx functions-framework --target=start_scan"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/workflows": "^3.3.0"
+  }
+}
