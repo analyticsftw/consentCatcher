@@ -13,7 +13,9 @@ from google.oauth2 import service_account
 from googleapiclient.http import MediaIoBaseDownload
 
 @functions_framework.http
-def read_diageo_categories():
+def read_diageo_categories(request):
+    event = request.get_json()
+    print(event)
 
     PROJECT_ID = "diageo-cookiebase"
     SECRET_NAME = "consent_catcher"
@@ -44,8 +46,8 @@ def read_diageo_categories():
         with open('categories.xlsx', 'wb') as f:
             f.write(file.read())
             f.close()
-
-        df = pd.DataFrame(pd.read_excel("categories.xlsx", sheet_name='Collated Cookie Categories')) 
+        # excel sheets have a limit in the sheets names of 31 characters, if the name has more characters the additional characters will not be captured
+        df = pd.DataFrame(pd.read_excel("categories.xlsx", sheet_name="Collated Cookie Categories - Ol")) 
         # clean_df = df.loc[df['Cookie Name'].isnull ]
         df_selected_columns = df.iloc[:, [0,1,2]]
 
@@ -54,11 +56,8 @@ def read_diageo_categories():
         clean_df.columns = ['cookie_name', 'diageo_category', 'category_id']
         dict_list_orient = clean_df.to_dict('records')
         print(dict_list_orient)
-
+        return dict_list_orient
     except HttpError as error:
         print(f"An error occurred: {error}")
         file = None
-
-    return dict_list_orient
-
-# download_xlsx_file_from_drive('test')
+        return(error)
