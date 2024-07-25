@@ -15,6 +15,7 @@ def cookies_json(request):
     try:
         websites = request.get_json(silent=True).get('websites')
         websites_json = json.loads(websites)
+
     except json.JSONDecodeError:
         logging.error("Invalid JSON format in the request.")
         return "Invalid JSON format", 400  # Bad Request
@@ -49,8 +50,9 @@ def cookies_json(request):
 
 def get_cookies_per_domain(domain, apiToken, hostname):
     domain_cookie_list = []
+    cookie_names = []
     datastore_client = datastore.Client()
-
+    print("scanning domain: ", domain)
     try:
         url = f"https://{hostname}/api/cookiemanager/v2/cookie-reports/search?language=en&countryCode=gb"
         payload = {"domains": [domain]}
@@ -63,28 +65,53 @@ def get_cookies_per_domain(domain, apiToken, hostname):
         response.raise_for_status()  # Raise an exception for bad responses
         response_data = response.json().get('content', [])
         # print(response_data)
+
         for item in response_data:
-            cookie_details = {
-                'output_date': datetime.today().strftime('%Y-%m-%d'),
-                'output_cookie_name': item.get('cookieName', ''),
-                'output_lifespan': item.get('lifespan', ''),
-                'output_host': item.get('host', ''),
-                'output_default_category': item.get('defaultCategory', ''),
-                'output_cookie_source': item.get('cookieSource', ''),
-                'output_default_description': item.get('defaultDescription', '').replace("\n", "") if item.get('defaultDescription') else '',
-                'output_default_third_party_description': item.get('defaultThirdPartyDescription', ''),
-                'output_expiry': item.get('expiry', ''),
-                'output_third_party': item.get('thirdParty', ''),
-                'output_cookie_id': item['domainCookieInfoDtoList'][0]['cookieId'] if item.get('domainCookieInfoDtoList') else '',
-                'output_domain_cookie_id': item['domainCookieInfoDtoList'][0]['domainCookieId'] if item.get('domainCookieInfoDtoList') else '',
-                'output_domain_name': item['domainCookieInfoDtoList'][0]['domainName'] if item.get('domainCookieInfoDtoList') else '',
-                'output_display_group_name': item['domainCookieInfoDtoList'][0]['displayGroupName'] if item.get('domainCookieInfoDtoList') else '',
-                'output_cookie_category_id': item['domainCookieInfoDtoList'][0]['cookieCategoryID'] if item.get('domainCookieInfoDtoList') else '',
-                'output_domain_third_party': item['domainCookieInfoDtoList'][0]['thirdParty'] if item.get('domainCookieInfoDtoList') else '',
-                'output_description': item['domainCookieInfoDtoList'][0]['description'].replace("\n", "") if item.get('domainCookieInfoDtoList') and item['domainCookieInfoDtoList'][0].get('description') else ''
-            }
-    
-            domain_cookie_list.append(cookie_details)
+            concatenated_value = f"{item.get('cookieName', '')}|{item.get('host', '')}"
+            print(concatenated_value)
+            if concatenated_value not in cookie_names:
+                cookie_names.append(concatenated_value)
+                
+                # Common details
+                common_details = {
+                    'output_date': datetime.today().strftime('%Y-%m-%d'),
+                    'output_cookie_name': item.get('cookieName', ''),
+                    'output_lifespan': item.get('lifespan', ''),
+                    'output_default_category': item.get('defaultCategory', ''),
+                    'output_cookie_source': item.get('cookieSource', ''),
+                    'output_default_description': item.get('defaultDescription', '').replace("\n", "") if item.get('defaultDescription') else '',
+                    'output_default_third_party_description': item.get('defaultThirdPartyDescription', ''),
+                    'output_expiry': item.get('expiry', ''),
+                    'output_third_party': item.get('thirdParty', '')
+                }
+
+                # Check if domainCookieInfoDtoList is not None before iterating
+                domain_cookie_info_list = item.get('domainCookieInfoDtoList') or []
+                
+                if not domain_cookie_info_list:
+                    # Add the common details if there are no domain-specific details
+                    cookie_details = {
+                        **common_details,
+                        'output_host': item.get('host', '')
+                    }
+                    domain_cookie_list.append(cookie_details)
+                else:
+                    for cookie in domain_cookie_info_list:
+                        # Only process cookies with matching hostName
+                        if cookie.get('hostName') == item.get('host'):
+                            # Merge common details with specific cookie details
+                            cookie_details = {
+                                **common_details,
+                                'output_host': cookie.get('hostName', ''),
+                                'output_cookie_id': cookie.get('cookieId', ''),
+                                'output_domain_cookie_id': cookie.get('domainCookieId', ''),
+                                'output_domain_name': cookie.get('domainName', ''),
+                                'output_display_group_name': cookie.get('displayGroupName', ''),
+                                'output_cookie_category_id': cookie.get('cookieCategoryID', ''),
+                                'output_domain_third_party': cookie.get('thirdParty', ''),
+                                'output_description': cookie.get('description', '').replace("\n", "") if cookie.get('description') else '',
+                            }
+                            domain_cookie_list.append(cookie_details)        
         entity_key = datastore_client.key('Cookies by domain', domain)
         domain_scanned = datastore.Entity(key=entity_key)
         domain_scanned.update(
@@ -93,26 +120,27 @@ def get_cookies_per_domain(domain, apiToken, hostname):
                 "last_updated": datetime.now(),
             }
         )
+        # print(domain_cookie_list)
         domain_cookies = []
         for cookie in domain_cookie_list:
             cookie_dict = {
-                'cookie_name': cookie['output_cookie_name'],
-                'cookie_category': cookie['output_default_category'],
-                'host': cookie['output_host'],
-                'cookie_id': cookie['output_cookie_id'],
-                'cookie_description': cookie['output_default_description'],
-                'third_party': cookie['output_third_party'],
-                'expiry': cookie['output_expiry'],
-                'lifespan': cookie['output_lifespan'],
-                'source': cookie['output_cookie_source'],
-                'third_party_description': cookie['output_default_third_party_description'],
-                'domain_cookie_id': cookie['output_domain_cookie_id'],
-                'domain_name': cookie['output_domain_name'],
-                'display_group_name': cookie['output_display_group_name'],
-                'cookie_category_id': cookie['output_cookie_category_id'],
-                'domain_third_party': cookie['output_domain_third_party'],
-                'description': cookie['output_description'],
-                'date': cookie['output_date']
+                'cookie_name': cookie.get('output_cookie_name', ''),
+                'cookie_category': cookie.get('output_default_category', ''),
+                'host': cookie.get('output_host', ''),
+                'cookie_id': cookie.get('output_cookie_id', ''),
+                'cookie_description': cookie.get('output_default_description', ''),
+                'third_party': cookie.get('output_third_party', ''),
+                'expiry': cookie.get('output_expiry', ''),
+                'lifespan': cookie.get('output_lifespan', ''),
+                'source': cookie.get('output_cookie_source', ''),
+                'third_party_description': cookie.get('output_default_third_party_description', ''),
+                'domain_cookie_id': cookie.get('output_domain_cookie_id', ''),
+                'domain_name': cookie.get('output_domain_name', ''),
+                'display_group_name': cookie.get('output_display_group_name', ''),
+                'cookie_category_id': cookie.get('output_cookie_category_id', ''),
+                'domain_third_party': cookie.get('output_domain_third_party', ''),
+                'description': cookie.get('output_description', ''),
+                'date': cookie.get('output_date', '')
             }
             domain_cookies.append(cookie_dict)
         domain_scanned['cookies'] = domain_cookies
@@ -129,6 +157,13 @@ def get_cookies_per_domain(domain, apiToken, hostname):
 
 def upload_cookie_datastore_from_csv(filename):
     datastore_client = datastore.Client()
+    # First delete the Cookies by name kind from datastore, some cookies might not be present in the sites anymore
+    query = datastore_client.query(kind='Cookies by name')
+    results = list(query.fetch())
+    for entity in results:
+        datastore_client.delete(entity.key)
+        print('Entity {} was deleted'.format(entity.key))
+    
     cookie_panda = pd.read_csv(filename).sort_values(by=["output_cookie_name"], ascending=True)
     distinct_cookies = cookie_panda["output_cookie_name"].unique()
     # We group the df by cookie_name

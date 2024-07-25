@@ -18,24 +18,33 @@ def read_diageo_categories(request):
 
     categorised_cookies = []
     categorised_ids = []
-    diageo_categories_obj = {}  # Dictionary for faster lookups
+    diageo_categories_obj = {}
 
     try:
+        # Get Diageo categories from Datastore
         diageo_categories = get_datastore_data('Diageo Category')
-        # print(diageo_categories)
+        # Create a dictionary of categories for faster lookups
         for category in diageo_categories:
             diageo_categories_obj[category['cookie_name']] = category
 
+        # Get cookies from Datastore
         diageo_cookies = get_datastore_data('Cookies by name')
+
         for cookie in diageo_cookies:
+            # Check if the cookie has unknown categories
             if cookie.get('unknown_categories'):
                 for host in cookie['host_list']:
+                    # Check if the cookie has a default category of 'Unknown'
                     if host['output_default_category'] == 'Unknown':
+                        # Check if the cookie has an output cookie name
                         cookie_name = host['output_cookie_name']
+                        # Check if the cookie hasn't been categorised yet
                         if host['output_cookie_id'] not in categorised_ids:
+                            # Check if the cookie is in the Diageo categories list
                             if cookie_name in diageo_categories_obj:
                                 try:
                                     print('categorising cookie {}'.format(cookie_name))
+                                    # Categorise the cookie
                                     categorise_cookie(
                                         # host['output_host'], cookie_name, host['output_cookie_id'],
                                         host['output_domain_name'], cookie_name, host['output_cookie_id'],
