@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+{% if tables %}
+  <div class="w-10/12 m-auto my-4">
+    <label for="tableSelector" class="block mb-2 text-sm font-medium text-gray-900 dark:text-black">Select Table:</label>
+    <select id="tableSelector" class="block w-full p-2.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+      {% for table in tables %}
+        <option value="{{ table.id }}">{{ table.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="tableContainer" class="w-10/12 m-auto"></div>
+
+  {#
+    <table class="text-sm text-left text-gray-500 dark:text-gray-400 w-10/12 m-auto" id="cookies">
+      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+        <tr>
+          {% for key, value in onetrust_cookies_headers.items() %}
+            {% if key == 'main' %}
+              {% for item in value %}
+                <th class="px-6 py-4" style="width: calc(100%/{{key|length}})">{{ item }}</th>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for cookie in onetrust_cookies_data %}
+            <tr class="siteCookiesRow bg-white border-b dark:bg-gray-800 dark:border-gray-700 cursor-pointer">
+              {% for key, value in cookie.items() %}
+                {% if key != 'host_list' %}
+                  <td class="px-6 py-4" style="width: calc(100%/{{cookie_categories_headers|length}})">{{ value }}</td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            <tr class="detailed-table border-b border-gray-200 dark:border-gray-700 cursor-pointer">
+              <td class="p-0" colspan="3">
+                <table
+                  class="text-xs text-left text-gray-500 dark:text-gray-800 w-full m-auto">
+                  <thead class="border border-gray-600 text-center text-xs text-gray-100 uppercase dark:text-gray-100 bg-gray-600">
+                    <tr>
+                      {% for key, value in onetrust_cookies_headers.items() %}
+                      {% if key == 'list' %}
+                        {% for item in value %}
+                          <th style="width: calc(100% / 5)" class="capitalize">{{ item }}</th>
+                        {% endfor %}
+                      {% endif %}
+                    {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for host in cookie.host_list %}
+                          <tr class="cookie_row border border-gray-600 hover:ring-inset hover:ring-blue-900 hover:ring-offset-0 hover:ring-2">
+                          {% for key, value in host.items() %}
+                            <td class="border border-gray-600 break-all p-1">{{ value }}</td>
+                          {% endfor %}
+                        </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+  <p>No data fetched yet.</p>
+  {% endif %}
+#}
+{% endif %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const tableSelector = document.getElementById('tableSelector');
+    const tableContainer = document.getElementById('tableContainer');
+    console.log('testing')
+
+    tableSelector.addEventListener('change', function() {
+      const selectedTableId = this.value;
+      fetchTableData(selectedTableId);
+    });
+
+    // Cargar la tabla inicial
+    fetchTableData(tableSelector.value);
+
+    function fetchTableData(tableId) {
+      // Realiza una solicitud a la vista Flask para obtener los datos de la tabla seleccionada
+      fetch(`/get_table_data/${tableId}`)
+        .then(response => response.json())
+        .then(data => {
+          // console.log(data);
+          renderTable(data);
+        })
+        .catch(error => console.error('Error fetching table data:', error));
+    }
+
+    function renderTable(data) {
+      let tableHtml = '';
+
+      if (data.headers && data.rows) {
+        tableHtml += `
+          <table class="text-sm text-left text-gray-500 dark:text-gray-400 w-full">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-950">
+              <tr>
+                ${data.headers.map(header => `<th class="px-6 py-4 text-slate-50">${header}</th>`).join('')}
+                <th class="px-6 py-4 text-slate-50">Expand</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.rows.map(row => `
+                <tr class="bg-white border-b dark:bg-zinc-50 dark:bg-zinc-200">
+                  ${data.headers.map(header => `<td class="px-6 py-4 dark:text-gray-950">${row[header]}</td>`).join('')}
+                  <td class="px-6 py-4 dark:text-gray-950">
+                    <svg class="w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } else {
+        tableHtml = '<p>No data available for the selected table.</p>';
+      }
+
+      tableContainer.innerHTML = tableHtml;
+    }
+  });
+</script>
+{% endblock %}

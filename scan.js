@@ -15,6 +15,70 @@ var sf = require("./support_functions.js");
 // var myArgs = process.argv.slice(2);
 // myURL = myArgs[0] ? myArgs[0] : "https://mightyhive.com/";
 
+// // First argument is the type of scan: url, sheet:
+// const firstArgument = process.argv[2]
+// // if url then the second argument will be the url to scan, if sheet then the second argument should be the spreadsheet id e.g.: '1VvSCITbbEWgFim0u75bzMydJh31bJxZDGkdyf7NPfTw':
+// const secondArgument = process.argv[3]
+// // if sheet then the third argument will be the range of the spreadsheet e.g.: 'Sheet1!A:A', third argument is not expected if 'url' is selected:
+// const thirdArgument = process.argv[4]
+
+// filename = "diageo_cookies.csv";
+// errorsFilename = "diageo_cookies_errors.csv";
+
+
+// // define browser type
+// const { chromium } = require("playwright");
+
+// const initiateScan = async () => {
+//   if(firstArgument == 'url'){
+//     if(secondArgument){
+//       try{
+//         scanUrl(secondArgument)
+//       }catch (error) {
+//         console.error("An error occurred:", error.message);
+//       }
+//     }else{
+//       console.log("A valid url is required when url scan is selected")
+//     }
+//   }else if (firstArgument == 'sheet'){
+//     if(secondArgument && thirdArgument){
+//       try{
+//         scanSheet(secondArgument, thirdArgument)
+//       }catch (error) {
+//         console.error("An error occurred:", error.message);
+//       }
+//     }else{
+//       console.log("A valid sheetId and sheetRange are required when 'sheet' is selected")
+//     }
+//   }else{
+//     console.log("The only valid arguments are 'url' or 'sheet'")
+//   }
+// }
+
+// const scanSheet = async(sheetId, sheetRange) => {
+//   let urls = [];
+//   try {
+//     sheet_data = await sf.google_sheets_read(sheetId,sheetRange)
+//     }catch (error) {\
+//       console.error("An error occurred trying to read the spreadsheet:", error.message);
+//     }
+//     if (sheet_data.length) {
+//     // loop through column value skipping first row
+//       sheet_data.slice(1).forEach((row) => {
+//         urls.push(row[0]);
+//         console.log(row[0])
+//       });
+//     } else {
+//       console.log("No data found.");
+//     }
+//     return(urls)
+// }
+
+// const scanUrl = async (url) => {
+//   console.log(url)
+// }
+
+
 
 const customSheet = process.argv[2];
 const sheetRange = process.argv[3];
@@ -176,7 +240,7 @@ const { chromium } = require("playwright");
 
       // Set a reasonable timeout for waiting for potential redirection.
       // This should be long enough to catch the redirection but not too long to cause unnecessary delays.
-      const navigationTimeout = 8000; // Adjust based on expected navigation time
+      const navigationTimeout = 8000;
 
       // Navigate to the initial URL and simultaneously prepare to handle potential redirection.
       const navigationPromise = page.goto(`https://${myURL}`, { waitUntil: 'domcontentloaded' }).catch(e => e);

@@ -22,51 +22,54 @@ def read_diageo_categories(request):
 
     try:
         # Get Diageo categories from Datastore
-        diageo_categories = get_datastore_data('Diageo Category')
+        diageo_categories = get_datastore_data('Diageo Categories')
         # Create a dictionary of categories for faster lookups
         for category in diageo_categories:
             diageo_categories_obj[category['cookie_name']] = category
+
+        print('Diageo categories: {}'.format(diageo_categories_obj))
 
         # Get cookies from Datastore
         diageo_cookies = get_datastore_data('Cookies by name')
 
         for cookie in diageo_cookies:
             # Check if the cookie has unknown categories
-            if cookie.get('unknown_categories'):
-                for host in cookie['host_list']:
-                    # Check if the cookie has a default category of 'Unknown'
-                    if host['output_default_category'] == 'Unknown':
-                        # Check if the cookie has an output cookie name
-                        cookie_name = host['output_cookie_name']
-                        # Check if the cookie hasn't been categorised yet
-                        if host['output_cookie_id'] not in categorised_ids:
-                            # Check if the cookie is in the Diageo categories list
-                            if cookie_name in diageo_categories_obj:
-                                try:
-                                    print('categorising cookie {}'.format(cookie_name))
-                                    # Categorise the cookie
-                                    categorise_cookie(
-                                        # host['output_host'], cookie_name, host['output_cookie_id'],
-                                        host['output_domain_name'], cookie_name, host['output_cookie_id'],
-                                        diageo_categories_obj[cookie_name]['category_id'], OT_TOKEN, OT_HOSTNAME
-                                    )
-                                    categorised_cookies.append({
-                                        'cookie_name': cookie_name,
-                                        'cookie_domain': host['output_domain_name'],
-                                        'cookie_host': host['output_host'],
-                                        'cookie_id': host['output_cookie_id'],
-                                        'old_category': host['output_default_category'],
-                                        'new_category': diageo_categories_obj[cookie_name]['category_name']
+            # if cookie.get('unknown_categories'):
+            for host in cookie['host_list']:
+                # Check if the cookie has a default category of 'Unknown'
+                # if host['output_default_category'] == 'Unknown':
+                # Check if the cookie has an output cookie name
+                cookie_name = host['output_cookie_name']
+                # Check if the cookie hasn't been categorised yet
+                if host['output_cookie_id'] not in categorised_ids:
+                    # Check if the cookie is in the Diageo categories list
+                    if cookie_name in diageo_categories_obj and diageo_categories_obj[cookie_name]['category_name'].lower() != host['output_default_category'].lower():
+                        try:
+                            print('categorising cookie {}'.format(host['output_domain_name']))
+                            print('update cookie {} category from {} to {}'.format( cookie_name ,host['output_default_category'], diageo_categories_obj[cookie_name]['category_name']))
+                            # CATEGORISE COOKIE
+                            categorise_cookie(
+                                # host['output_host'], cookie_name, host['output_cookie_id'],
+                                host['output_domain_name'], cookie_name, host['output_cookie_id'],
+                                diageo_categories_obj[cookie_name]['category_id'], OT_TOKEN, OT_HOSTNAME
+                            )
+                            categorised_cookies.append({
+                                'cookie_name': cookie_name,
+                                'cookie_domain': host['output_domain_name'],
+                                'cookie_host': host['output_host'],
+                                'cookie_id': host['output_cookie_id'],
+                                'old_category': host['output_default_category'],
+                                'new_category': diageo_categories_obj[cookie_name]['category_name']
 
-                                    })
-                                    categorised_ids.append(host['output_cookie_id'])
-                                except requests.RequestException as e:
-                                    logging.error(f"Error categorizing cookie {cookie_name}: {e}")
-                            else:
-                                logging.info(f'Cookie not in Diageo list: {cookie_name}')
-                        else:
-                            print(f'Cookie already categorized: {cookie_name}')
-                            logging.info(f'Cookie already categorized: {cookie_name}')
+                            })
+                            categorised_ids.append(host['output_cookie_id'])
+                        except requests.RequestException as e:
+                            logging.error(f"Error categorizing cookie {cookie_name}: {e}")
+                    else:
+                        logging.info(f'Cookie not in Diageo list: {cookie_name}')
+                else:
+                    print(f'Cookie already categorized: {cookie_name}')
+                    logging.info(f'Cookie already categorized: {cookie_name}')
         update_categorised_cookies_ds(categorised_cookies)
     except Exception as e:  # Catch any unexpected errors
         logging.error(f"An unexpected error occurred: {e}")
@@ -136,3 +139,6 @@ def update_categorised_cookies_ds(categorised_array):
     datastore_client.put(categorised)
     
     return categorised_array
+
+
+# read_diageo_categories('test')

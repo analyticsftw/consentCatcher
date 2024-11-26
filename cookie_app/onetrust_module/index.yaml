@@ -1,0 +1,7 @@
+indexes:
+
+- kind: Cookie
+  ancestor: no
+  properties:
+  - name: unknown_categories
+  - name: cookie_name

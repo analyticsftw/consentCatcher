@@ -28,11 +28,12 @@ var internal = module.exports = {
  * @param {*} filename
  * @param {*} phase
  */
-   function cookie2csv  (cookie,filename,phase="phase_undefined") {
+   function cookie2csv  (cookie,filename,phase="before") {
     const { Parser } = require('json2csv');
     const fields = [
       'date',
-      'siteURL',
+      'initalURL',
+      'redirectedURL',
       'phase',
       'sameSite',
       'name',
@@ -50,8 +51,7 @@ var internal = module.exports = {
     const now = new Date();
     const callTime = now.toISOString();
 
-    var cl = 0; 
-    cl = cookie.length;
+    var cl = 0; cl = cookie.length;
     for (i = 0; i < cl; i++) {
       cookie[i].date=callTime;
       cookie[i].phase=phase;
@@ -65,25 +65,6 @@ var internal = module.exports = {
       var output = lines.join('\n');
       // Write to file
       internal.logHit(filename,output)
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function param2csv (filename, orignalURL, siteURL, param){
-    const { Parser } = require('json2csv');
-    const fields = [
-      'date',
-      'initial_url',
-      'redirected_url',
-      'parameter'
-    ]
-    const opts = { fields };
-    const now = new Date();
-    const callTime = now.toISOString();
-    message = [addQuotes(callTime), addQuotes(orignalURL), addQuotes(siteURL), addQuotes(param)]
-    try {
-      internal.logHit(filename,message);
     } catch (err) {
       console.error(err);
     }
@@ -141,28 +122,6 @@ function error2csv(filename,url, errorMessage){
  }
 }
 
-function source2csv(filename, sources){
-  const { Parser } = require('json2csv');
-  const newLine = '\r\n';
-  const fields = ['site_scanned', 'cookie_siteURL', 'cookie_name', 'cookie_sources'];
-
-  // Add the additional parameter to each source object
-  // const updatedSources = sources.map(source => ({
-  //   ...source,
-  //   cookie_siteURL: siteURL
-  // }));
-
-  const json2csvParser = new Parser({ fields, header: false });
-  const csv = json2csvParser.parse(sources) + newLine;
-
-  try {
-    fs.appendFileSync(filename, csv);
-    console.log('Data was appended to file!');
-  } catch (error) {
-    console.error('Error appending data to file:', error);
-  }
-}
-
 
 /**
  * logHit: function to write message to file
@@ -216,7 +175,6 @@ async function google_sheets_read (sheetId, range){
 }
 
 async function appendToBigQuery(datasetId, tableId, filename){
-  console.log("appending " + filename)
   const { BigQuery } = require('@google-cloud/bigquery');
   const bigquery = new BigQuery(await getSecret('projects/191126329179/secrets/consent_catcher/versions/1'), { projectId: 'your-project-id' });
 
@@ -239,7 +197,7 @@ async function appendToBigQuery(datasetId, tableId, filename){
     if (errors && errors.length > 0) {
       throw new Error('BigQuery job failed');
     }
-    console.log(filename + ' loaded successfully.');
+    console.log('CSV data loaded successfully.');
   }
 
   loadCSVData().catch(console.error);
@@ -261,8 +219,6 @@ module.exports = {
   logHit,
   google_sheets_read,
   error2csv,
-  source2csv,
-  appendToBigQuery,
-  param2csv
+  appendToBigQuery
 }
 

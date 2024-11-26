@@ -14,8 +14,8 @@ from googleapiclient.http import MediaIoBaseDownload
 
 @functions_framework.http
 def read_diageo_categories(request):
-    event = request.get_json()
-    print(event)
+    # event = request.get_json()
+    # print(event)
 
     PROJECT_ID = "diageo-cookiebase"
     SECRET_NAME = "consent_catcher"
@@ -53,11 +53,16 @@ def read_diageo_categories(request):
 
         # Any rows with all the cells empy will be dropped
         clean_df = df_selected_columns.dropna(how='all')
-        clean_df.columns = ['cookie_name', 'diageo_category', 'category_id']
-        dict_list_orient = clean_df.to_dict('records')
+        # Print duplicates
+        print(clean_df[clean_df.duplicated()])
+        clean_df_deduped = clean_df.drop_duplicates(subset=['Cookie Name'], keep='first')
+        clean_df_deduped.columns = ['cookie_name', 'diageo_category', 'category_id']
+        dict_list_orient = clean_df_deduped.to_dict('records')
         print(dict_list_orient)
         return dict_list_orient
     except HttpError as error:
         print(f"An error occurred: {error}")
         file = None
         return(error)
+    
+read_diageo_categories('test')

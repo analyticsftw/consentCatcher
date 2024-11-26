@@ -5,12 +5,13 @@ import math
 import functions_framework
 from cloudevents.conversion import to_structured
 from cloudevents.http import CloudEvent
+from datetime import datetime
 
 
 @functions_framework.http
 def update_datastore_diageo_categories(request):
     datastore_client = datastore.Client()
-    datastore_kind = 'Diageo Category'
+    datastore_kind = 'Diageo Categories'
     get_categories_url = 'https://europe-west4-diageo-cookiebase.cloudfunctions.net/get_diageo_categories_xlsx'
 
     try:
@@ -35,6 +36,13 @@ def update_datastore_diageo_categories(request):
         # If the response was successful, no Exception will be raised
         response.raise_for_status()
 
+        # first delete all the categories in the datastore
+        query = datastore_client.query(kind=datastore_kind)
+        results = list(query.fetch())
+        for entity in results:
+            datastore_client.delete(entity.key)
+        
+
         for category in response.json():
             # don't do anything if the category_id is NaN
             if isinstance(category["category_id"], float) and math.isnan(category["category_id"]):
@@ -43,26 +51,28 @@ def update_datastore_diageo_categories(request):
             else:
                 print("Category id is valid {}".format(category))
                 print(category)
+
                 # All kind names that begin with two underscores are reserved by GCP, so we add * to the beginning and end of the name
-                # kind_name = ''
-                # if category['cookie_name'].startswith('__'):
-                #     kind_name = '*{}*'.format(category['cookie_name'])
-                # else:
-                #     kind_name = category['cookie_name']
+                kind_name = ''
+                if category['cookie_name'].startswith('__'):
+                    kind_name = '*{}*'.format(category['cookie_name'])
+                else:
+                    kind_name = category['cookie_name']
 
-                # entity_key = datastore_client.key(datastore_kind, kind_name)
-                # category_entity = datastore.Entity(key=entity_key)
+                entity_key = datastore_client.key(datastore_kind, kind_name)
+                category_entity = datastore.Entity(key=entity_key)
 
-                # category_entity.update(
-                #     {
-                #         'cookie_name': category['cookie_name'],
-                #         'category_name': category['diageo_category'], 
-                #         'category_id': category['category_id']
-                #     }
-                # )
+                category_entity.update(
+                    {
+                        'cookie_name': category['cookie_name'].rstrip(), #remove trailing spaces
+                        'category_name': category['diageo_category'], 
+                        'category_id': category['category_id'],
+                        'last_updated': datetime.now(),
+                    }
+                )
 
-                # datastore_client.put(category_entity)
-                # print('Cookie {} was uploaded succesfully uploaded to datastore'.format(category_entity.get('cookie_name'))) 
+                datastore_client.put(category_entity)
+                print('Cookie {} was uploaded succesfully uploaded to datastore'.format(category_entity.get('cookie_name'))) 
         return response.text 
     except Exception as e:
         print(e)

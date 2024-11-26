@@ -47,5 +47,3 @@ def get_ot_websites(request):
     with open('websites.json', 'w') as f:
         json.dump(data, f)
     return json_string
-
-get_ot_websites('test')

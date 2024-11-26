@@ -3,16 +3,16 @@ import secrets
 import pandas as pd
 import json
 
-from flask import Flask, redirect, url_for, session, render_template
+from flask import Flask, redirect, url_for, session, render_template, jsonify
 from flask_oauthlib.client import OAuth
 
-
 import bigquery_queries
-
 from google.cloud import secretmanager
 from extensions import cache
+from onetrust_module.onetrust_functions import get_datastore_data
+from onetrust_module.onetrust_functions import sanitise_data
 
-
+# from categoriseCookies import read_cookie_registry
 
 app = Flask(__name__)
 cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
@@ -249,6 +249,82 @@ def cookie_sources():
         # User is not logged in
         return redirect(url_for('login'))
 
+
+ot_authorized_users = ['andres@mightyhive.com', 'helen@mightyhive.com', 'julien@mightyhive.com']
+@app.route('/onetrust-cookies')
+def onetrust_cookies():
+    if 'google_token' in session:
+        user_info = google.get('userinfo')
+        if user_info.status == 200:
+            if user_info.data['email'] in ot_authorized_users:
+                print(user_info.data['email'])
+                # print('reading cookies')
+                # onetrust_cookies_headers = {
+                #     'main' : ['Cookie Name','Unknown Categories', 'Categories'],
+                #     'list' : ['Category', 'Site', 'Cookie Id', 'Cookie Name']
+                # }
+                # print(type(onetrust_cookies_headers))
+                # onetrust_cookies_data = get_datastore_data('Cookie')
+                # print(onetrust_cookies_data)
+                tables = [
+                    {'name' : 'Diageo Cookies from by Cookie',
+                     'id' : 'diageo_cookies'
+                    },
+                    {'name' : 'Diageo Cookie Categories',
+                      'id' : 'diageo_cookie_categories' 
+                    },
+                    {'name' : 'Diageo Cookie Categorisation',
+                     'id' : 'diageo_cookie_categorisation'
+                    },
+                ]
+                user_info = google.get('userinfo')
+                return render_template('onetrust_cookies.html', tables=tables, user=user_info.data, page='Onetrust Cookies', show_search_bar=True )
+                # return render_template('onetrust_cookies.html', onetrust_cookies_data=onetrust_cookies_data, onetrust_cookies_headers=onetrust_cookies_headers, user=user_info.data, page='Onetrust Cookies', show_search_bar=True )
+            else: 
+                return "Unauthorised User"
+        else:
+        # Handle HTTP error from Google API
+            return redirect(url_for('login'))
+    else:
+        # User is not logged in
+        return redirect(url_for('login'))
+    
+@app.route('/get_table_data/diageo_cookies')
+def get_table_data():
+    if 'google_token' in session:
+        user_info = google.get('userinfo')
+        if user_info.status == 200:
+            if user_info.data['email'] in ot_authorized_users:
+                print(user_info.data['email'])
+                print('reading cookies')
+                # headers = {
+                #     'main' : ['Cookie Name','Unknown Categories', 'Categories'],
+                #     'list' : ['Category', 'Site', 'Cookie Id', 'Cookie Name']
+                # }
+                headers = ['cookie_name', 'unknown_categories', 'categories']
+                # rows = [['one', 'two', 'three', 'four']]
+                # print(type(onetrust_cookies_headers))
+                rows = get_datastore_data('Cookie')
+                print(rows)
+                data = {
+                    'headers' : headers,
+                    'rows' : rows
+                }
+                sanitised_data = sanitise_data(data)
+                # print(onetrust_cookies_data)
+                user_info = google.get('userinfo')
+                # print(jsonify(data))
+                return jsonify(sanitised_data)
+                # print(onetrust_cookies_data)
+                # return onetrust_cookies_data
+            else: 
+                return "Unauthorised User"
+        else:
+        # Handle HTTP error from Google API
+            return redirect(url_for('login'))
+    else:
+        # User is not logged in
+        return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)

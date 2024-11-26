@@ -1,0 +1,19 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - build
+    - -t
+    - europe-west4-docker.pkg.dev/diageo-cookiebase/consent-catcher/site_scan_pyhton:latest
+    # - us-east1-docker.pkg.dev/andres-testing-project/ekam-test/read-facebook_reports
+    - .
+
+  # Docker push to Google Artifact Registry
+  - name: gcr.io/cloud-builders/docker
+    args:
+    - push
+    - europe-west4-docker.pkg.dev/diageo-cookiebase/consent-catcher/site_scan_pyhton:latest
+    # - us-east1-docker.pkg.dev/andres-testing-project/ekam-test/read-facebook_reports
+# images:
+#   - us-east1-docker.pkg.dev/andres-testing-project/ekam-test/read-fb_reports:${SHORT_SHA}
+# options:
+  # logging: CLOUD_LOGGING_ONLY
